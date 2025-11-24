@@ -3,7 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { CorrectionResponse, WordDefinition, LiveSuggestion, AIModel, WritingStyle } from "../types";
 
 const getAiClient = () => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("API Key not found. Please check your environment configuration.");
   }
@@ -18,9 +18,9 @@ export const analyzeText = async (text: string, modelName: AIModel = 'gemini-2.5
   const ai = getAiClient();
   const response = await ai.models.generateContent({
     model: modelName,
-    contents: `Analyze the following English text. 
+    contents: `Analyze the following English text.
     1. Correct any grammar errors.
-    2. Provide a 'betterPhrasing' version that is rewritten in a **${style.toUpperCase()}** style. 
+    2. Provide a 'betterPhrasing' version that is rewritten in a **${style.toUpperCase()}** style.
        - If 'formal', make it professional, polite, and precise.
        - If 'casual', make it conversational, relaxed, and friendly.
        - If 'technical', use precise terminology and clear, objective structure.
@@ -30,13 +30,13 @@ export const analyzeText = async (text: string, modelName: AIModel = 'gemini-2.5
     3. List key improvements.
     4. Extract interesting vocabulary, phrasal verbs, or idioms used in your 'betterPhrasing' version.
     5. **IELTS Assessment**: Evaluate the ORIGINAL input text based on IELTS Writing criteria. Provide an overall band score (0.0 to 9.0) and a score/feedback for: Task Achievement/Response, Coherence & Cohesion, Lexical Resource, and Grammatical Range & Accuracy.
-    
-    IMPORTANT: You must return the corrected text broken down into a list of segments. 
+
+    IMPORTANT: You must return the corrected text broken down into a list of segments.
     - Parts of the text that are unchanged should be normal segments.
     - Parts that are changed/corrected should be marked as 'isCorrection: true'.
     - For corrections, you MUST provide the 'originalText' (what was replaced) and a brief 'explanation' of the error.
     - Reconstructing the 'text' fields of the segments in order should yield the full corrected text.
-    
+
     Input Text:
     "${text}"
     `,
@@ -109,10 +109,10 @@ export const analyzeText = async (text: string, modelName: AIModel = 'gemini-2.5
 
   const jsonText = response.text;
   if (!jsonText) throw new Error("No response from AI");
-  
+
   try {
     const data = JSON.parse(jsonText);
-    
+
     // Construct correctedText from segments to ensure backward compatibility and easy copying
     const correctedText = data.segments ? data.segments.map((s: any) => s.text).join('') : "";
 
@@ -140,8 +140,8 @@ export const defineWord = async (word: string, context: string, modelName: AIMod
           definition: { type: Type.STRING, description: "A concise definition relevant to the context." },
           partOfSpeech: { type: Type.STRING, description: "Noun, Verb, Adjective, etc." },
           exampleSentence: { type: Type.STRING, description: "A new example sentence using the word." },
-          synonyms: { 
-            type: Type.ARRAY, 
+          synonyms: {
+            type: Type.ARRAY,
             items: { type: Type.STRING },
             description: "Up to 3 synonyms."
           }
@@ -160,18 +160,18 @@ export const getLiveSuggestion = async (text: string, modelName: AIModel = 'gemi
   // Extract the last incomplete sentence or the last full sentence
   const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g);
   if (!sentences || sentences.length === 0) return null;
-  
+
   const lastFragment = sentences[sentences.length - 1].trim();
   if (lastFragment.length < 3) return null; // Too short to analyze
 
   const ai = getAiClient();
   const response = await ai.models.generateContent({
     model: modelName,
-    contents: `Analyze this text fragment: "${lastFragment}". 
-    If it has a grammar error, correct it. 
-    If it ends abruptly, suggest a completion. 
+    contents: `Analyze this text fragment: "${lastFragment}".
+    If it has a grammar error, correct it.
+    If it ends abruptly, suggest a completion.
     If it is correct but simple, suggest a more sophisticated phrasing.
-    
+
     IMPORTANT: If the text is perfectly fine and needs no immediate change, return the original fragment as the 'suggestion', set 'type' to 'refinement', and 'reason' to 'No changes needed'. Do NOT return null.`,
     config: {
       responseMimeType: "application/json",
@@ -190,10 +190,18 @@ export const getLiveSuggestion = async (text: string, modelName: AIModel = 'gemi
 
   const jsonText = response.text;
   if (!jsonText) return null;
-  
+
   try {
      return JSON.parse(jsonText) as LiveSuggestion;
   } catch (e) {
     return null;
   }
 };
+
+const geminiService = {
+  analyzeText,
+  defineWord,
+  getLiveSuggestion
+};
+
+export default geminiService;

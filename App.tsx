@@ -1,104 +1,48 @@
+import React, { useEffect } from 'react';
+import { ThemeProvider } from 'styled-components';
+import { Provider } from 'react-redux';
+import { store, useAppSelector } from './store';
+import { GlobalStyles } from './styles/GlobalStyles';
+import { lightTheme, darkTheme } from './styles/theme';
+import Login from './components/Auth/Login';
+import WritingStudio from './components/WritingStudio/WritingStudio';
+import AdminDashboard from './components/Admin/AdminDashboard';
 
-import React, { useState, useEffect } from 'react';
-import { Login } from './components/Login';
-import { WritingStudio } from './components/WritingStudio';
-import { AdminDashboard } from './components/AdminDashboard';
-import { User, AppSettings } from './types';
+const AppContent: React.FC = () => {
+  const { isAuthenticated, currentView } = useAppSelector((state) => state.auth);
+  const { theme } = useAppSelector((state) => state.settings);
 
-function App() {
-  // --- Auth State ---
-  const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem('pp_user');
-    return stored ? JSON.parse(stored) : null;
-  });
-
-  // --- App Settings State ---
-  const [settings, setSettings] = useState<AppSettings>(() => {
-    const stored = localStorage.getItem('pp_settings');
-    return stored ? JSON.parse(stored) : {
-      fontFamily: 'inter',
-      aiModel: 'gemini-2.5-flash',
-      theme: 'light' // default logic will be overridden by effect
-    };
-  });
-
-  // --- View State ---
-  const [currentView, setCurrentView] = useState<'login' | 'writing' | 'admin'>(() => {
-    return user ? 'writing' : 'login';
-  });
-
-  // Persist Settings
   useEffect(() => {
-    localStorage.setItem('pp_settings', JSON.stringify(settings));
-  }, [settings]);
-
-  // Apply Theme
-  useEffect(() => {
-    // If no preference is stored, check system
-    const isDark = settings.theme === 'dark' || 
-      (settings.theme === undefined && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      
-    if (isDark) {
+    // Apply theme class to document on mount and theme change
+    if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [settings.theme]);
+  }, [theme]);
 
-  const handleLogin = (email: string) => {
-    // Mock Authentication Logic
-    const newUser: User = {
-      id: crypto.randomUUID(),
-      email,
-      name: email.split('@')[0],
-      role: email.includes('admin') ? 'admin' : 'user'
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('pp_user', JSON.stringify(newUser));
-    setCurrentView(newUser.role === 'admin' ? 'admin' : 'writing');
-  };
+  const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
 
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('pp_user');
-    setCurrentView('login');
-  };
-
-  const handleUpdateSettings = (newSettings: Partial<AppSettings>) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
-  };
-
-  const toggleTheme = () => {
-    handleUpdateSettings({ theme: settings.theme === 'dark' ? 'light' : 'dark' });
-  };
-
-  // Render Logic
-  if (!user) {
-    return <Login onLogin={handleLogin} />;
+  if (!isAuthenticated) {
+    return <Login />;
   }
 
-  if (currentView === 'admin' && user.role === 'admin') {
-    return (
-      <AdminDashboard 
-        user={user}
-        settings={settings}
-        onUpdateSettings={handleUpdateSettings}
-        onLogout={handleLogout}
-        onBackToApp={() => setCurrentView('writing')}
-      />
-    );
+  if (currentView === 'admin') {
+    return <AdminDashboard />;
   }
 
+  return <WritingStudio />;
+};
+
+const App: React.FC = () => {
   return (
-    <WritingStudio 
-      user={user}
-      settings={settings}
-      onLogout={handleLogout}
-      onOpenAdmin={() => setCurrentView('admin')}
-      onToggleTheme={toggleTheme}
-    />
+    <Provider store={store}>
+      <ThemeProvider theme={lightTheme}>
+        <GlobalStyles />
+        <AppContent />
+      </ThemeProvider>
+    </Provider>
   );
-}
+};
 
 export default App;

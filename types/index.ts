@@ -14,7 +14,7 @@ export interface VocabularyItem {
 }
 
 export interface IeltsCriterion {
-  name: string; // e.g., 'Lexical Resource'
+  name: string;
   score: number;
   feedback: string;
 }
@@ -68,8 +68,6 @@ export interface LiveSuggestion {
   type: 'correction' | 'completion' | 'refinement';
   reason: string;
 }
-
-// --- Auth & Admin Types ---
 
 export type UserRole = 'user' | 'admin';
 

@@ -1,15 +1,24 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
+import { Provider } from 'react-redux';
+import { ThemeProvider } from 'styled-components';
 import App from './App';
+import { store } from './store';
+import { lightTheme, darkTheme } from './styles/theme';
+import { GlobalStyles } from './styles/GlobalStyles';
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
-}
+const container = document.getElementById('root');
+if (!container) throw new Error('Failed to find root element');
 
-const root = ReactDOM.createRoot(rootElement);
+const root = createRoot(container);
+
 root.render(
   <React.StrictMode>
-    <App />
+    <Provider store={store}>
+      <ThemeProvider theme={lightTheme}>
+        <GlobalStyles />
+        <App />
+      </ThemeProvider>
+    </Provider>
   </React.StrictMode>
 );

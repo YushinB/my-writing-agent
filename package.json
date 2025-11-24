@@ -1,23 +1,76 @@
 {
-  "name": "prosepolish",
+  "name": "prosepolish-refactored",
+  "version": "2.0.0",
+  "description": "AI-Powered Writing Assistant with Redux, Webpack, and Styled-Components",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "webpack serve --mode development",
+    "build": "webpack --mode production",
+    "build:analyze": "cross-env ANALYZE=true webpack --mode production",
+    "preview": "webpack serve --mode production",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
   "dependencies": {
-    "react-dom": "^19.2.0",
-    "react": "^19.2.0",
+    "@google/genai": "^1.30.0",
+    "@reduxjs/toolkit": "^2.0.0",
     "lucide-react": "^0.554.0",
-    "@google/genai": "^1.30.0"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-redux": "^9.0.0",
+    "redux": "^5.0.0",
+    "styled-components": "^6.1.8"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-react": "^7.27.0",
+    "@babel/preset-typescript": "^7.27.0",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.6.1",
     "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^5.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/styled-components": "^5.1.34",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "babel-loader": "^9.1.0",
+    "babel-plugin-styled-components": "^2.1.4",
+    "cross-env": "^7.0.3",
+    "css-loader": "^6.8.0",
+    "css-minimizer-webpack-plugin": "^5.0.0",
+    "dotenv": "^16.3.0",
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "html-webpack-plugin": "^5.5.0",
+    "mini-css-extract-plugin": "^2.7.0",
+    "postcss": "^8.5.6",
+    "postcss-loader": "^7.3.0",
+    "prettier": "^3.0.0",
+    "react-refresh": "^0.18.0",
+    "style-loader": "^3.3.0",
+    "terser-webpack-plugin": "^5.3.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "webpack": "^5.88.0",
+    "webpack-bundle-analyzer": "^4.9.0",
+    "webpack-cli": "^5.1.0",
+    "webpack-dev-server": "^4.15.0"
+  },
+  "keywords": [
+    "ai",
+    "writing",
+    "grammar",
+    "redux",
+    "styled-components",
+    "webpack",
+    "react",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }
