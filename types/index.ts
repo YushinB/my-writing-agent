@@ -11,6 +11,7 @@ export interface VocabularyItem {
   type: 'word' | 'phrasal_verb' | 'idiom';
   definition: string;
   example: string;
+  pronunciation?: string; // IPA pronunciation
 }
 
 export interface IeltsCriterion {

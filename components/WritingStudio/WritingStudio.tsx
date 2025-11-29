@@ -4,15 +4,17 @@ import {
   PenLine, Book, Sun, Moon, LogOut, Sparkles,
   Briefcase, Coffee, Terminal, Feather, GraduationCap, Hash,
   AlertCircle, ArrowDown, CheckCircle2, Copy, Award, BarChart3,
-  Zap, ArrowUpRight, Eraser
+  Zap, ArrowUpRight, Eraser, Settings, BookmarkPlus, Loader2
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { setInputText } from '../../store/slices/editorSlice';
-import { analyzeText, getLiveSuggestion as getLiveSuggestionAction } from '../../store/slices/analysisSlice';
+import { analyzeText} from '../../store/slices/analysisSlice';
 import { toggleTheme } from '../../store/slices/settingsSlice';
-import { logout } from '../../store/slices/authSlice';
+import { logout, setCurrentView } from '../../store/slices/authSlice';
+import { openDictionary, addWord } from '../../store/slices/dictionarySlice';
 import geminiService from '../../services/gemini';
-import { WritingStyle, LiveSuggestion } from '../../types';
+import { WritingStyle, LiveSuggestion, WordDefinition } from '../../types';
+import Dictionary from '../Dictionary/Dictionary';
 
 // Animations
 const fadeIn = keyframes`
@@ -468,6 +470,8 @@ const CardContent = styled.div`
   font-size: 20px;
   line-height: 1.8;
   color: ${({ theme }) => theme.colors.text};
+  user-select: text;
+  cursor: text;
 `;
 
 const CorrectionSegment = styled.span<{ $isCorrection?: boolean; $isOriginal?: boolean }>`
@@ -773,9 +777,18 @@ const VocabItem = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   padding: ${({ theme }) => theme.spacing.md};
   margin-bottom: ${({ theme }) => theme.spacing.md};
+  transition: all ${({ theme }) => theme.transitions.base};
+  cursor: pointer;
+  position: relative;
 
   &:last-child {
     margin-bottom: 0;
+  }
+
+  &:hover {
+    background-color: #f3e8ff;
+    transform: translateX(4px);
+    box-shadow: ${({ theme }) => theme.shadows.sm};
   }
 `;
 
@@ -784,12 +797,51 @@ const VocabHeader = styled.div`
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
   margin-bottom: ${({ theme }) => theme.spacing.sm};
+  justify-content: space-between;
+`;
+
+const AddVocabButton = styled.button`
+  padding: 4px 10px;
+  background-color: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.base};
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+
+  ${VocabItem}:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    background-color: #7c3aed;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
 `;
 
 const VocabTerm = styled.span`
   font-size: 15px;
   font-weight: 700;
   color: #8b5cf6;
+`;
+
+const VocabPronunciation = styled.span`
+  font-size: 13px;
+  font-weight: 400;
+  color: #64748b;
+  font-family: 'Segoe UI', 'Arial Unicode MS', sans-serif;
+  margin-left: ${({ theme }) => theme.spacing.xs};
+  font-style: italic;
 `;
 
 const VocabBadge = styled.span`
@@ -824,11 +876,133 @@ const VocabExample = styled.div`
   }
 `;
 
+// Word Selection Popover
+const WordPopover = styled.div<{ $visible?: boolean; $x?: number; $y?: number }>`
+  position: fixed;
+  left: ${({ $x }) => $x || 0}px;
+  top: ${({ $y }) => $y || 0}px;
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  box-shadow: ${({ theme }) => theme.shadows.xl};
+  padding: ${({ theme }) => theme.spacing.lg};
+  min-width: 320px;
+  max-width: 400px;
+  z-index: 1000;
+  opacity: ${({ $visible }) => $visible ? 1 : 0};
+  visibility: ${({ $visible }) => $visible ? 'visible' : 'hidden'};
+  transform: ${({ $visible }) => $visible ? 'translateY(0)' : 'translateY(-10px)'};
+  transition: all 0.2s ease;
+  animation: ${({ $visible }) => $visible ? fadeIn : 'none'} 0.2s ease;
+`;
+
+const PopoverHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+`;
+
+const PopoverWord = styled.h3`
+  font-size: ${({ theme }) => theme.fontSizes.lg};
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.primary};
+  margin: 0;
+`;
+
+const PopoverPartOfSpeech = styled.span`
+  font-size: ${({ theme }) => theme.fontSizes.xs};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  background-color: ${({ theme }) => theme.colors.surfaceAlt};
+  padding: 4px 8px;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-weight: 600;
+  text-transform: uppercase;
+`;
+
+const PopoverDefinition = styled.p`
+  font-size: ${({ theme }) => theme.fontSizes.sm};
+  color: ${({ theme }) => theme.colors.text};
+  line-height: 1.6;
+  margin: 0 0 ${({ theme }) => theme.spacing.md} 0;
+`;
+
+const PopoverExample = styled.p`
+  font-size: ${({ theme }) => theme.fontSizes.sm};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  line-height: 1.6;
+  margin: 0 0 ${({ theme }) => theme.spacing.md} 0;
+  font-style: italic;
+  padding: ${({ theme }) => theme.spacing.sm};
+  background-color: ${({ theme }) => theme.colors.surfaceAlt};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-left: 3px solid ${({ theme }) => theme.colors.primary};
+`;
+
+const PopoverSynonyms = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.spacing.xs};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+`;
+
+const SynonymTag = styled.span`
+  font-size: ${({ theme }) => theme.fontSizes.xs};
+  color: #7c3aed;
+  background-color: #f3e8ff;
+  padding: 4px 10px;
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  font-weight: 500;
+`;
+
+const PopoverActions = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.sm};
+  padding-top: ${({ theme }) => theme.spacing.md};
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+const PopoverButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
+  flex: 1;
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  background-color: ${({ $variant, theme }) =>
+    $variant === 'primary' ? theme.colors.primary : 'transparent'};
+  color: ${({ $variant, theme }) =>
+    $variant === 'primary' ? 'white' : theme.colors.textSecondary};
+  border: 1px solid ${({ $variant, theme }) =>
+    $variant === 'primary' ? theme.colors.primary : theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: ${({ theme }) => theme.fontSizes.sm};
+  font-weight: 600;
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.base};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${({ theme }) => theme.spacing.xs};
+
+  &:hover {
+    background-color: ${({ $variant, theme }) =>
+      $variant === 'primary' ? theme.colors.primaryHover : theme.colors.surfaceHover};
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const LoadingSpinner = styled(Loader2)`
+  animation: ${spin} 1s linear infinite;
+`;
+
 const WritingStudio: React.FC = () => {
   const dispatch = useAppDispatch();
   const { inputText } = useAppSelector((state) => state.editor);
   const { result, loading, error } = useAppSelector((state) => state.analysis);
   const { theme: currentTheme } = useAppSelector((state) => state.settings);
+  const { user } = useAppSelector((state) => state.auth);
 
   const [selectedStyle, setSelectedStyle] = useState<WritingStyle>('formal');
   const [liveMode, setLiveMode] = useState(false);
@@ -836,7 +1010,15 @@ const WritingStudio: React.FC = () => {
   const [isGettingSuggestion, setIsGettingSuggestion] = useState(false);
   const [analysisType, setAnalysisType] = useState<'grammar' | 'phrasing'>('grammar');
 
+  // Word selection popover state
+  const [selectedWord, setSelectedWord] = useState<string>('');
+  const [wordDefinition, setWordDefinition] = useState<WordDefinition | null>(null);
+  const [isLookingUpWord, setIsLookingUpWord] = useState(false);
+  const [popoverVisible, setPopoverVisible] = useState(false);
+  const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
 
   const styleOptions: { id: WritingStyle; label: string; icon: React.ReactNode }[] = [
     { id: 'formal', label: 'Formal', icon: <Briefcase size={14} /> },
@@ -903,6 +1085,16 @@ const WritingStudio: React.FC = () => {
     dispatch(logout());
   };
 
+  const handleSettings = () => {
+    if (user?.role === 'admin') {
+      dispatch(setCurrentView('admin'));
+    }
+  };
+
+  const handleOpenDictionary = () => {
+    dispatch(openDictionary());
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
   };
@@ -917,6 +1109,47 @@ const WritingStudio: React.FC = () => {
     }
   };
 
+
+  // Handle adding vocabulary item to dictionary
+  const handleAddVocabToDictionary = useCallback(async (term: string, definition: string, example: string) => {
+    const vocabDefinition: WordDefinition = {
+      word: term,
+      definition: definition,
+      partOfSpeech: 'vocabulary',
+      exampleSentence: example,
+      synonyms: []
+    };
+    dispatch(addWord(vocabDefinition));
+  }, [dispatch]);
+
+  // Handle adding word to dictionary
+  const handleAddToDictionary = () => {
+    if (wordDefinition) {
+      dispatch(addWord(wordDefinition));
+      setPopoverVisible(false);
+    }
+  };
+
+  // Close popover
+  const handleClosePopover = () => {
+    setPopoverVisible(false);
+    setWordDefinition(null);
+    setSelectedWord('');
+  };
+
+  // Click outside to close popover
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (popoverVisible && !target.closest('[data-popover]') && !target.closest('textarea')) {
+        handleClosePopover();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [popoverVisible]);
+
   return (
     <Container>
       <Header>
@@ -930,7 +1163,12 @@ const WritingStudio: React.FC = () => {
           <IconButton onClick={handleThemeToggle} title="Toggle theme">
             {currentTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </IconButton>
-          <IconButton title="Dictionary">
+          {user?.role === 'admin' && (
+            <IconButton onClick={handleSettings} title="Admin Settings">
+              <Settings size={20} />
+            </IconButton>
+          )}
+          <IconButton onClick={handleOpenDictionary} title="Dictionary">
             <Book size={20} />
           </IconButton>
           <SignOutButton onClick={handleSignOut}>
@@ -958,6 +1196,7 @@ const WritingStudio: React.FC = () => {
 
           <EditorAreaWrapper>
             <EditorArea
+              ref={editorRef}
               value={inputText}
               onChange={handleTextChange}
               placeholder="Type your text here..."
@@ -1261,8 +1500,22 @@ const WritingStudio: React.FC = () => {
                       {result.enhancedVocabulary.map((item, idx) => (
                         <VocabItem key={idx}>
                           <VocabHeader>
-                            <VocabTerm>{item.term}</VocabTerm>
-                            <VocabBadge>{item.type.replace('_', ' ')}</VocabBadge>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                                <VocabTerm>{item.term}</VocabTerm>
+                                {item.pronunciation && (
+                                  <VocabPronunciation>/{item.pronunciation}/</VocabPronunciation>
+                                )}
+                              </div>
+                              <VocabBadge>{item.type.replace('_', ' ')}</VocabBadge>
+                            </div>
+                            <AddVocabButton
+                              onClick={() => handleAddVocabToDictionary(item.term, item.definition, item.example)}
+                              title="Add to dictionary"
+                            >
+                              <BookmarkPlus size={14} />
+                              Add
+                            </AddVocabButton>
                           </VocabHeader>
                           <VocabDetail>
                             <strong>Definition:</strong> {item.definition}
@@ -1280,6 +1533,70 @@ const WritingStudio: React.FC = () => {
           </OutputContent>
         </OutputPanel>
       </MainContent>
+
+      {/* Dictionary Sidebar */}
+      <Dictionary />
+
+      {/* Word Selection Popover */}
+      <WordPopover
+        data-popover
+        $visible={popoverVisible}
+        $x={popoverPosition.x}
+        $y={popoverPosition.y}
+      >
+        {isLookingUpWord ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <LoadingSpinner size={24} />
+            <p style={{ marginTop: '12px', fontSize: '14px', color: '#64748b' }}>
+              Looking up "{selectedWord}"...
+            </p>
+          </div>
+        ) : wordDefinition ? (
+          <>
+            <PopoverHeader>
+              <PopoverWord>{wordDefinition.word}</PopoverWord>
+              <PopoverPartOfSpeech>{wordDefinition.partOfSpeech}</PopoverPartOfSpeech>
+            </PopoverHeader>
+
+            <PopoverDefinition>{wordDefinition.definition}</PopoverDefinition>
+
+            {wordDefinition.exampleSentence && (
+              <PopoverExample>"{wordDefinition.exampleSentence}"</PopoverExample>
+            )}
+
+            {wordDefinition.synonyms && wordDefinition.synonyms.length > 0 && (
+              <PopoverSynonyms>
+                {wordDefinition.synonyms.map((synonym, idx) => (
+                  <SynonymTag key={idx}>{synonym}</SynonymTag>
+                ))}
+              </PopoverSynonyms>
+            )}
+
+            <PopoverActions>
+              <PopoverButton $variant="secondary" onClick={handleClosePopover}>
+                Close
+              </PopoverButton>
+              <PopoverButton $variant="primary" onClick={handleAddToDictionary}>
+                <BookmarkPlus size={16} />
+                Add to Dictionary
+              </PopoverButton>
+            </PopoverActions>
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <p style={{ fontSize: '14px', color: '#64748b' }}>
+              Could not find definition for "{selectedWord}"
+            </p>
+            <PopoverButton
+              $variant="secondary"
+              onClick={handleClosePopover}
+              style={{ marginTop: '12px' }}
+            >
+              Close
+            </PopoverButton>
+          </div>
+        )}
+      </WordPopover>
     </Container>
   );
 };

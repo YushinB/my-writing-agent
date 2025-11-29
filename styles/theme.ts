@@ -10,7 +10,8 @@ export const lightTheme: DefaultTheme = {
     background: '#fafafa',
     surface: '#ffffff',
     surfaceHover: '#f8fafc',
-    
+    surfaceAlt: '#f8fafc',
+
     text: '#0f172a',
     textSecondary: '#64748b',
     textTertiary: '#94a3b8',
@@ -81,6 +82,7 @@ export const lightTheme: DefaultTheme = {
   borderRadius: {
     sm: '0.375rem',
     base: '0.5rem',
+    md: '0.625rem',
     lg: '0.75rem',
     xl: '1rem',
     full: '9999px',
@@ -104,7 +106,8 @@ export const darkTheme: DefaultTheme = {
     background: '#0f172a',
     surface: '#1e293b',
     surfaceHover: '#334155',
-    
+    surfaceAlt: '#334155',
+
     text: '#f1f5f9',
     textSecondary: '#cbd5e1',
     textTertiary: '#94a3b8',
@@ -149,6 +152,7 @@ declare module 'styled-components' {
       background: string;
       surface: string;
       surfaceHover: string;
+      surfaceAlt: string;
       text: string;
       textSecondary: string;
       textTertiary: string;
@@ -207,6 +211,7 @@ declare module 'styled-components' {
     borderRadius: {
       sm: string;
       base: string;
+      md: string;
       lg: string;
       xl: string;
       full: string;

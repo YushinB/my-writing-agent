@@ -39,6 +39,7 @@ const settingsSlice = createSlice({
       } else {
         document.documentElement.classList.remove('dark');
       }
+      console.log(`${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} theme applied`);
     },
     
     setFontFamily: (state, action: PayloadAction<AppFont>) => {

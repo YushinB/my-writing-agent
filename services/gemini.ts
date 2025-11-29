@@ -69,9 +69,10 @@ export const analyzeText = async (text: string, modelName: AIModel = 'gemini-2.5
                 term: { type: Type.STRING, description: "The word or phrase." },
                 type: { type: Type.STRING, enum: ['word', 'phrasal_verb', 'idiom'] },
                 definition: { type: Type.STRING, description: "Meaning of the term in this context." },
-                example: { type: Type.STRING, description: "An example sentence using this term." }
+                example: { type: Type.STRING, description: "An example sentence using this term." },
+                pronunciation: { type: Type.STRING, description: "IPA (International Phonetic Alphabet) pronunciation of the term." }
               },
-              required: ["term", "type", "definition", "example"]
+              required: ["term", "type", "definition", "example", "pronunciation"]
             }
           },
           explanation: { type: Type.STRING, description: "A brief summary of the main grammatical issues found." },
@@ -198,10 +199,28 @@ export const getLiveSuggestion = async (text: string, modelName: AIModel = 'gemi
   }
 };
 
+export const generateText = async (prompt: string, modelName: AIModel = 'gemini-2.5-flash'): Promise<string> => {
+  if (!prompt.trim()) {
+    throw new Error("Please provide a prompt.");
+  }
+
+  const ai = getAiClient();
+  const response = await ai.models.generateContent({
+    model: modelName,
+    contents: prompt
+  });
+
+  const text = response.text;
+  if (!text) throw new Error("No response from AI");
+
+  return text;
+};
+
 const geminiService = {
   analyzeText,
   defineWord,
-  getLiveSuggestion
+  getLiveSuggestion,
+  generateText
 };
 
 export default geminiService;

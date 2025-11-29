@@ -29,9 +29,11 @@ const Button = styled.button`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.lg};
   background-color: ${({ theme }) => theme.colors.primary};
   color: white;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
   font-weight: 500;
   transition: background-color ${({ theme }) => theme.transitions.base};
+  border: none;
+  cursor: pointer;
 
   &:hover {
     background-color: ${({ theme }) => theme.colors.primaryHover};
@@ -91,7 +93,7 @@ const AdminDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const handleBackToEditor = () => {
-    dispatch(setCurrentView('editor'));
+    dispatch(setCurrentView('writing'));
   };
 
   return (
