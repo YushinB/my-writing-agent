@@ -151,50 +151,50 @@
 
 ### 5. Type Definitions ⏱️ 2 hours
 
-- [ ] **5.1** Create type files
-  - [ ] Create `src/types/express.d.ts` (extend Express Request)
-  - [ ] Create `src/types/auth.types.ts`
-  - [ ] Create `src/types/dictionary.types.ts`
-  - [ ] Create `src/types/llm.types.ts`
-  - [ ] Create `src/types/api.types.ts`
+- [x] **5.1** Create type files
+  - [x] Create `src/types/express.d.ts` (extend Express Request)
+  - [x] Create `src/types/auth.types.ts`
+  - [x] Create `src/types/dictionary.types.ts`
+  - [x] Create `src/types/llm.types.ts`
+  - [x] Create `src/types/api.types.ts`
 
-- [ ] **5.2** Define response interfaces
-  - [ ] ApiResponse<T>
-  - [ ] ApiError
-  - [ ] PaginationMeta
+- [x] **5.2** Define response interfaces
+  - [x] ApiResponse<T>
+  - [x] ApiError
+  - [x] PaginationMeta
 
 ---
 
 ### 6. Utility Functions ⏱️ 2-3 hours
 
-- [ ] **6.1** Create error utilities
-  - [ ] Create `src/utils/errors.ts`
-  - [ ] Define custom error classes (NotFoundError, ValidationError, etc.)
-  - [ ] Define error codes enum
+- [x] **6.1** Create error utilities
+  - [x] Create `src/utils/errors.ts`
+  - [x] Define custom error classes (NotFoundError, ValidationError, etc.)
+  - [x] Define error codes enum
 
-- [ ] **6.2** Create validation utilities
-  - [ ] Create `src/utils/validation.ts`
-  - [ ] Define Zod schemas for common validations
-  - [ ] Email validation
-  - [ ] Password validation
-  - [ ] UUID validation
+- [x] **6.2** Create validation utilities
+  - [x] Create `src/utils/validation.ts`
+  - [x] Define Zod schemas for common validations
+  - [x] Email validation
+  - [x] Password validation
+  - [x] UUID validation
 
-- [ ] **6.3** Create hash utilities
-  - [ ] Create `src/utils/hash.ts`
-  - [ ] Implement bcrypt hashing
-  - [ ] Implement password comparison
+- [x] **6.3** Create hash utilities
+  - [x] Create `src/utils/hash.ts`
+  - [x] Implement bcrypt hashing
+  - [x] Implement password comparison
 
-- [ ] **6.4** Create JWT utilities
-  - [ ] Create `src/utils/jwt.ts`
-  - [ ] Generate access token function
-  - [ ] Generate refresh token function
-  - [ ] Verify token function
-  - [ ] Decode token function
+- [x] **6.4** Create JWT utilities
+  - [x] Create `src/utils/jwt.ts`
+  - [x] Generate access token function
+  - [x] Generate refresh token function
+  - [x] Verify token function
+  - [x] Decode token function
 
-- [ ] **6.5** Create transformation utilities
-  - [ ] Create `src/utils/transform.ts`
-  - [ ] Transform Free Dictionary API response
-  - [ ] Transform database models to API responses
+- [x] **6.5** Create transformation utilities
+  - [x] Create `src/utils/transform.ts`
+  - [x] Transform Free Dictionary API response
+  - [x] Transform database models to API responses
 
 ---
 
