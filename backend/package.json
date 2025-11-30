@@ -17,6 +17,7 @@
     "test:coverage": "jest --coverage",
     "test:verbose": "jest --verbose",
     "test:dictionary": "ts-node src/test-dictionary.ts",
+    "test:mywords": "ts-node src/test-mywords.ts",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",

@@ -324,14 +324,14 @@
 
 ### 12. My Words Service ⏱️ 3-4 hours
 
-- [ ] **12.1** Create my words service
-  - [ ] Create `src/services/myWords.service.ts`
-  - [ ] Implement getUserWords (paginated)
-  - [ ] Implement addWordToUserDictionary
-  - [ ] Implement removeWordFromUserDictionary
-  - [ ] Implement searchUserWords
-  - [ ] Check for duplicate words
-  - [ ] Add Redis caching for frequently accessed words
+- [x] **12.1** Create my words service
+  - [x] Create `src/services/myWords.service.ts`
+  - [x] Implement getUserWords (paginated)
+  - [x] Implement addWordToUserDictionary
+  - [x] Implement removeWordFromUserDictionary
+  - [x] Implement searchUserWords
+  - [x] Check for duplicate words
+  - [x] Add Redis caching for frequently accessed words
 
 ---
 
@@ -774,7 +774,7 @@
 
 For a quick MVP in 1 week:
 
-- [ ] Set up project + database + Redis (Day 1)
+- [x] Set up project + database + Redis (Day 1)
 - [ ] Create utilities + middleware (Day 1-2)
 - [ ] Implement auth (Day 2)
 - [ ] Implement dictionary service (Day 3)

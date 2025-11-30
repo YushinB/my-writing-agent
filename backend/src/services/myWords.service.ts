@@ -2,15 +2,48 @@ import { prisma } from '../config/database';
 import { SavedWord } from '@prisma/client';
 import { NotFoundError, ConflictError } from '../utils/errors';
 import { calculateOffset, createPaginationMeta } from '../utils/transform';
+import { cacheService } from './cache.service';
 import logger from '../utils/logger';
 
 /**
  * My Words Service
- * Manages user's saved words
+ * Manages user's saved words with Redis caching
  */
 class MyWordsService {
+  private readonly CACHE_TTL = 3600; // 1 hour for user words cache
   /**
-   * Get user's saved words (paginated)
+   * Generate cache key for user words list
+   */
+  private getUserWordsListCacheKey(userId: string, page: number, limit: number): string {
+    return `user:${userId}:words:page:${page}:limit:${limit}`;
+  }
+
+  /**
+   * Generate cache key for user word count
+   */
+  private getUserWordCountCacheKey(userId: string): string {
+    return `user:${userId}:words:count`;
+  }
+
+  /**
+   * Invalidate all caches for a user
+   */
+  private async invalidateUserCache(userId: string): Promise<void> {
+    try {
+      // Delete word count cache
+      await cacheService.delete(this.getUserWordCountCacheKey(userId));
+
+      // Delete paginated lists cache (pattern-based)
+      await cacheService.deletePattern(`user:${userId}:words:page:*`);
+
+      logger.info(`Cache invalidated for user ${userId}`);
+    } catch (error) {
+      logger.warn(`Failed to invalidate cache for user ${userId}:`, error);
+    }
+  }
+
+  /**
+   * Get user's saved words (paginated) with Redis caching
    * @param userId - User ID
    * @param page - Page number
    * @param limit - Items per page
@@ -18,6 +51,17 @@ class MyWordsService {
    */
   async getUserWords(userId: string, page: number = 1, limit: number = 10) {
     try {
+      // Check cache for first page only (most frequently accessed)
+      if (page === 1) {
+        const cacheKey = this.getUserWordsListCacheKey(userId, page, limit);
+        const cached = await cacheService.get<any>(cacheKey);
+
+        if (cached) {
+          logger.info(`User words retrieved from cache for user ${userId}`);
+          return cached;
+        }
+      }
+
       const offset = calculateOffset(page, limit);
 
       // Get total count
@@ -33,10 +77,18 @@ class MyWordsService {
         take: limit,
       });
 
-      return {
+      const result = {
         words,
         pagination: createPaginationMeta(total, page, limit),
       };
+
+      // Cache first page only
+      if (page === 1) {
+        const cacheKey = this.getUserWordsListCacheKey(userId, page, limit);
+        await cacheService.setex(cacheKey, result, this.CACHE_TTL);
+      }
+
+      return result;
     } catch (error) {
       logger.error(`Error getting words for user ${userId}:`, error);
       throw error;
@@ -77,6 +129,9 @@ class MyWordsService {
         },
       });
 
+      // Invalidate cache
+      await this.invalidateUserCache(userId);
+
       logger.info(`Word added for user ${userId}: ${normalizedWord}`);
       return savedWord;
     } catch (error) {
@@ -109,6 +164,9 @@ class MyWordsService {
       await prisma.savedWord.delete({
         where: { id: wordId },
       });
+
+      // Invalidate cache
+      await this.invalidateUserCache(userId);
 
       logger.info(`Word removed for user ${userId}: ${savedWord.word}`);
     } catch (error) {
@@ -144,6 +202,9 @@ class MyWordsService {
         where: { id: wordId },
         data: { notes },
       });
+
+      // Invalidate cache
+      await this.invalidateUserCache(userId);
 
       logger.info(`Notes updated for word ${wordId}`);
       return updated;
@@ -227,15 +288,30 @@ class MyWordsService {
   }
 
   /**
-   * Get total word count for user
+   * Get total word count for user with Redis caching
    * @param userId - User ID
    * @returns Total saved words count
    */
   async getWordCount(userId: string): Promise<number> {
     try {
-      return await prisma.savedWord.count({
+      // Check cache
+      const cacheKey = this.getUserWordCountCacheKey(userId);
+      const cached = await cacheService.get<number>(cacheKey);
+
+      if (cached !== null) {
+        logger.info(`Word count retrieved from cache for user ${userId}`);
+        return cached;
+      }
+
+      // Get from database
+      const count = await prisma.savedWord.count({
         where: { userId },
       });
+
+      // Cache the count
+      await cacheService.setex(cacheKey, count, this.CACHE_TTL);
+
+      return count;
     } catch (error) {
       logger.error(`Error getting word count for user ${userId}:`, error);
       return 0;
