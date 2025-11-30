@@ -372,47 +372,47 @@
 
 ### 15. Controllers Implementation ⏱️ 6-8 hours
 
-- [ ] **15.1** Create auth controller
-  - [ ] Create `src/controllers/auth.controller.ts`
-  - [ ] Implement register handler
-  - [ ] Implement login handler
-  - [ ] Implement refresh handler
-  - [ ] Implement logout handler
-  - [ ] Implement getCurrentUser handler
+- [x] **15.1** Create auth controller
+  - [x] Create `src/controllers/auth.controller.ts`
+  - [x] Implement register handler
+  - [x] Implement login handler
+  - [x] Implement refresh handler
+  - [x] Implement logout handler
+  - [x] Implement getCurrentUser handler
 
-- [ ] **15.2** Create dictionary controller
-  - [ ] Create `src/controllers/dictionary.controller.ts`
-  - [ ] Implement searchDictionary handler
-  - [ ] Implement getWordDefinition handler
-  - [ ] Implement getFullWordData handler
-  - [ ] Implement addWord handler (admin)
+- [x] **15.2** Create dictionary controller
+  - [x] Create `src/controllers/dictionary.controller.ts`
+  - [x] Implement searchDictionary handler
+  - [x] Implement getWordDefinition handler
+  - [x] Implement getFullWordData handler
+  - [x] Implement addWord handler (admin)
 
-- [ ] **15.3** Create my words controller
-  - [ ] Create `src/controllers/myWords.controller.ts`
-  - [ ] Implement getUserWords handler
-  - [ ] Implement addWord handler
-  - [ ] Implement removeWord handler
-  - [ ] Implement searchWords handler
+- [x] **15.3** Create my words controller
+  - [x] Create `src/controllers/myWords.controller.ts`
+  - [x] Implement getUserWords handler
+  - [x] Implement addWord handler
+  - [x] Implement removeWord handler
+  - [x] Implement searchWords handler
 
-- [ ] **15.4** Create LLM controller
-  - [ ] Create `src/controllers/llm.controller.ts`
-  - [ ] Implement correctText handler
-  - [ ] Implement defineWord handler
-  - [ ] Implement generateSuggestions handler
-  - [ ] Implement analyzeWritingStyle handler
+- [x] **15.4** Create LLM controller
+  - [x] Create `src/controllers/llm.controller.ts`
+  - [x] Implement correctText handler
+  - [x] Implement defineWord handler
+  - [x] Implement generateSuggestions handler
+  - [x] Implement analyzeWritingStyle handler
 
-- [ ] **15.5** Create settings controller
-  - [ ] Create `src/controllers/settings.controller.ts`
-  - [ ] Implement getSettings handler
-  - [ ] Implement updateSettings handler
+- [x] **15.5** Create settings controller
+  - [x] Create `src/controllers/settings.controller.ts`
+  - [x] Implement getSettings handler
+  - [x] Implement updateSettings handler
 
-- [ ] **15.6** Create health controller
-  - [ ] Create `src/controllers/health.controller.ts`
-  - [ ] Check database connection
-  - [ ] Check Redis connection
-  - [ ] Check external APIs (Free Dictionary, Gemini)
-  - [ ] Return cache metrics
-  - [ ] Return performance metrics
+- [x] **15.6** Create health controller
+  - [x] Create `src/controllers/health.controller.ts`
+  - [x] Check database connection
+  - [x] Check Redis connection
+  - [x] Check external APIs (Free Dictionary, Gemini)
+  - [x] Return cache metrics
+  - [x] Return performance metrics
 
 ---
 

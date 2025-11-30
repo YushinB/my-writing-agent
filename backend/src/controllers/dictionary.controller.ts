@@ -35,6 +35,30 @@ export const getWordDefinition = asyncHandler(async (req: Request, res: Response
 });
 
 /**
+ * Get full word data (definition + metadata)
+ * GET /api/dictionary/word/:word/full
+ */
+export const getFullWordData = asyncHandler(async (req: Request, res: Response) => {
+  const { word } = req.params;
+  const result = await dictionaryService.searchWord(word);
+
+  if (!result) {
+    throw new NotFoundError(`Word "${word}" not found`);
+  }
+
+  // Return full data with additional metadata
+  const fullData = {
+    ...result,
+    metadata: {
+      queriedAt: new Date().toISOString(),
+      word: result.word,
+    },
+  };
+
+  res.json(createSuccessResponse(fullData));
+});
+
+/**
  * Add word to dictionary (admin only)
  * POST /api/dictionary/words
  */
