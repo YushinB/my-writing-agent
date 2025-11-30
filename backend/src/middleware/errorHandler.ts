@@ -9,12 +9,7 @@ import { Prisma } from '@prisma/client';
  * Global error handler middleware
  * Must be registered after all routes
  */
-export function errorHandler(
-  error: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export function errorHandler(error: Error, req: Request, res: Response, next: NextFunction) {
   // Log the error
   void next;
   logger.error('Error occurred:', {

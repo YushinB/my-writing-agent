@@ -53,11 +53,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
 /**
  * Optional authentication - Attach user if token is provided, but don't require it
  */
-export async function optionalAuthenticate(
-  req: Request,
-  _res: Response,
-  next: NextFunction
-) {
+export async function optionalAuthenticate(req: Request, _res: Response, next: NextFunction) {
   void _res;
   try {
     const authHeader = req.headers.authorization;
@@ -117,9 +113,7 @@ export function requireRole(...roles: UserRole[]) {
       }
 
       if (!roles.includes(req.user.role)) {
-        throw new ForbiddenError(
-          `Access denied. Required role: ${roles.join(' or ')}`
-        );
+        throw new ForbiddenError(`Access denied. Required role: ${roles.join(' or ')}`);
       }
 
       next();

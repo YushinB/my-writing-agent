@@ -37,10 +37,7 @@ class LLMService {
    * @param request - Correction request
    * @returns Corrected text with changes
    */
-  async correctText(
-    userId: string,
-    request: CorrectTextRequest
-  ): Promise<CorrectTextResponse> {
+  async correctText(userId: string, request: CorrectTextRequest): Promise<CorrectTextResponse> {
     try {
       // Generate cache key
       const hash = this.generateHash(request.text + (request.context || ''));
@@ -86,10 +83,7 @@ class LLMService {
   /**
    * Define word using AI
    */
-  async defineWord(
-    userId: string,
-    request: DefineWordRequest
-  ): Promise<DefineWordResponse> {
+  async defineWord(userId: string, request: DefineWordRequest): Promise<DefineWordResponse> {
     try {
       // Generate cache key
       const hash = this.generateHash(request.word + (request.context || ''));
@@ -265,7 +259,9 @@ Format as JSON:
 
       // Parse AI response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      const aiAnalysis = jsonMatch ? JSON.parse(jsonMatch[0]) : { tone: 'neutral', suggestions: [] };
+      const aiAnalysis = jsonMatch
+        ? JSON.parse(jsonMatch[0])
+        : { tone: 'neutral', suggestions: [] };
 
       // Calculate readability score (simplified Flesch Reading Ease)
       const readabilityScore = Math.max(
@@ -315,10 +311,7 @@ Format as JSON:
   /**
    * Parse correction response
    */
-  private parseCorrectionResponse(
-    aiResponse: string,
-    originalText: string
-  ): CorrectTextResponse {
+  private parseCorrectionResponse(aiResponse: string, originalText: string): CorrectTextResponse {
     // Simple parsing - extract corrected text
     const correctedText = aiResponse.trim();
 

@@ -81,9 +81,7 @@ class SessionService {
   async deleteSession(sessionId: string): Promise<void> {
     try {
       // Get session data to find user ID
-      const sessionData = await cacheService.get<SessionData>(
-        cacheService.sessionKey(sessionId)
-      );
+      const sessionData = await cacheService.get<SessionData>(cacheService.sessionKey(sessionId));
 
       // Delete session
       const sessionKey = cacheService.sessionKey(sessionId);

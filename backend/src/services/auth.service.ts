@@ -1,11 +1,7 @@
 import { userService } from './user.service';
 import { sessionService } from './session.service';
 import { comparePassword } from '../utils/hash';
-import {
-  generateAccessToken,
-  generateRefreshToken,
-  verifyRefreshToken,
-} from '../utils/jwt';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import {
   InvalidCredentialsError,
   UnauthorizedError,
@@ -40,11 +36,7 @@ class AuthService {
       }
 
       // Create user
-      const user = await userService.createUser(
-        data.email,
-        data.password,
-        data.name
-      );
+      const user = await userService.createUser(data.email, data.password, data.name);
 
       // Generate tokens
       const tokens = this.generateTokenPair(user.id, user.email, user.role);

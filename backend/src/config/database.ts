@@ -11,13 +11,12 @@ class DatabaseClient {
     if (!DatabaseClient.instance) {
       DatabaseClient.instance = new PrismaClient({
         log:
-          process.env.NODE_ENV === 'development'
-            ? ['query', 'info', 'warn', 'error']
-            : ['error'],
+          process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
       });
 
       // Handle connection events
-      DatabaseClient.instance.$connect()
+      DatabaseClient.instance
+        .$connect()
         .then(() => {
           logger.info('✅ Database connected successfully');
         })

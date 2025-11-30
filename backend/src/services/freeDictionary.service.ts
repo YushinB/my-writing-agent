@@ -1,9 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { env } from '../config/env';
-import {
-  FreeDictionaryApiResponse,
-  DictionaryEntry,
-} from '../types/dictionary.types';
+import { FreeDictionaryApiResponse, DictionaryEntry } from '../types/dictionary.types';
 import { transformFreeDictionaryResponse } from '../utils/transform';
 import { ExternalApiError } from '../utils/errors';
 import logger from '../utils/logger';
@@ -71,9 +68,7 @@ class FreeDictionaryService {
           message: axiosError.message,
         });
 
-        throw new ExternalApiError(
-          `Failed to fetch definition: ${axiosError.message}`
-        );
+        throw new ExternalApiError(`Failed to fetch definition: ${axiosError.message}`);
       }
 
       logger.error(`Unexpected error fetching word ${word}:`, error);

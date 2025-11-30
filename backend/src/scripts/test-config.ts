@@ -15,7 +15,9 @@ async function testConfiguration() {
     logger.info('📍 Test 2: Security Configuration');
     const hasValidJwtSecrets =
       env.JWT_ACCESS_SECRET.length >= 32 && env.JWT_REFRESH_SECRET.length >= 32;
-    logger.info(`   JWT Secrets: ${hasValidJwtSecrets ? '✅ Valid' : '⚠️  Should be changed in production'}`);
+    logger.info(
+      `   JWT Secrets: ${hasValidJwtSecrets ? '✅ Valid' : '⚠️  Should be changed in production'}`
+    );
     logger.info(`   Access Token Expiry: ${env.JWT_ACCESS_EXPIRY}`);
     logger.info(`   Refresh Token Expiry: ${env.JWT_REFRESH_EXPIRY}`);
 
@@ -26,13 +28,17 @@ async function testConfiguration() {
 
     // Test 4: Cache TTL Configuration
     logger.info('\n📍 Test 4: Cache TTL Configuration');
-    logger.info(`   Dictionary Cache: ${env.CACHE_TTL_DICTIONARY}s (${env.CACHE_TTL_DICTIONARY / 86400} days)`);
+    logger.info(
+      `   Dictionary Cache: ${env.CACHE_TTL_DICTIONARY}s (${env.CACHE_TTL_DICTIONARY / 86400} days)`
+    );
     logger.info(`   User Cache: ${env.CACHE_TTL_USER}s (${env.CACHE_TTL_USER / 3600} hours)`);
     logger.info(`   LLM Cache: ${env.CACHE_TTL_LLM}s (${env.CACHE_TTL_LLM / 86400} days)`);
 
     // Test 5: Rate Limiting Configuration
     logger.info('\n📍 Test 5: Rate Limiting Configuration');
-    logger.info(`   Window: ${env.RATE_LIMIT_WINDOW_MS}ms (${env.RATE_LIMIT_WINDOW_MS / 60000} minutes)`);
+    logger.info(
+      `   Window: ${env.RATE_LIMIT_WINDOW_MS}ms (${env.RATE_LIMIT_WINDOW_MS / 60000} minutes)`
+    );
     logger.info(`   General Max Requests: ${env.RATE_LIMIT_MAX_REQUESTS}`);
     logger.info(`   Auth Max Requests: ${env.RATE_LIMIT_AUTH_MAX}`);
     logger.info(`   LLM Max Requests: ${env.RATE_LIMIT_LLM_MAX}`);
@@ -60,10 +66,7 @@ async function testConfiguration() {
 
     // Test 9: Gemini Connection Test
     logger.info('\n📍 Test 9: Gemini AI Connection Test');
-    if (
-      env.GEMINI_API_KEY &&
-      env.GEMINI_API_KEY !== 'your-gemini-api-key-here'
-    ) {
+    if (env.GEMINI_API_KEY && env.GEMINI_API_KEY !== 'your-gemini-api-key-here') {
       logger.info('   Testing connection to Gemini AI...');
       const isConnected = await testGeminiConnection();
       logger.info(`   Connection: ${isConnected ? '✅ Success' : '❌ Failed'}`);

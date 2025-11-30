@@ -17,11 +17,7 @@ router.delete('/:id', myWordsController.removeWord);
 
 router.patch('/:id', myWordsController.updateNotes);
 
-router.get(
-  '/search',
-  validateQuery(searchQuerySchema),
-  myWordsController.searchWords
-);
+router.get('/search', validateQuery(searchQuerySchema), myWordsController.searchWords);
 
 router.get('/count', myWordsController.getWordCount);
 

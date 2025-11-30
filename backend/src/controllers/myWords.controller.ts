@@ -14,14 +14,7 @@ export const getUserWords = asyncHandler(async (req: Request, res: Response) => 
 
   const result = await myWordsService.getUserWords(userId, page, limit);
 
-  res.json(
-    createPaginatedResponse(
-      result.words,
-      result.pagination.total,
-      page,
-      limit
-    )
-  );
+  res.json(createPaginatedResponse(result.words, result.pagination.total, page, limit));
 });
 
 /**
@@ -73,14 +66,7 @@ export const searchWords = asyncHandler(async (req: Request, res: Response) => {
 
   const result = await myWordsService.searchWords(userId, query, page, limit);
 
-  res.json(
-    createPaginatedResponse(
-      result.words,
-      result.pagination.total,
-      page,
-      limit
-    )
-  );
+  res.json(createPaginatedResponse(result.words, result.pagination.total, page, limit));
 });
 
 /**

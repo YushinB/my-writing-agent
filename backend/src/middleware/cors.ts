@@ -35,20 +35,10 @@ const corsOptions: CorsOptions = {
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
   // Allowed headers
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'Accept',
-    'Origin',
-  ],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
 
   // Exposed headers (accessible to client)
-  exposedHeaders: [
-    'RateLimit-Limit',
-    'RateLimit-Remaining',
-    'RateLimit-Reset',
-  ],
+  exposedHeaders: ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset'],
 
   // Cache preflight requests for 24 hours
   maxAge: 86400,

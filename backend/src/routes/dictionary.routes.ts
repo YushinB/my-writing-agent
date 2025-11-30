@@ -10,11 +10,7 @@ const router = Router();
 router.use(authenticate);
 
 // Search and lookup
-router.get(
-  '/search',
-  validateQuery(dictionarySearchSchema),
-  dictionaryController.searchWord
-);
+router.get('/search', validateQuery(dictionarySearchSchema), dictionaryController.searchWord);
 
 router.get('/word/:word', dictionaryController.getWordDefinition);
 
@@ -23,10 +19,6 @@ router.get('/popular', dictionaryController.getPopularWords);
 // Admin only routes
 router.post('/words', requireAdmin, dictionaryController.addWord);
 
-router.post(
-  '/word/:word/refresh',
-  requireAdmin,
-  dictionaryController.refreshCacheEntry
-);
+router.post('/word/:word/refresh', requireAdmin, dictionaryController.refreshCacheEntry);
 
 export default router;

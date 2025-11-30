@@ -112,11 +112,7 @@ class DictionaryService {
   /**
    * Cache entry to both Redis and database
    */
-  private async cacheEntry(
-    word: string,
-    entry: DictionaryEntry,
-    source: string
-  ): Promise<void> {
+  private async cacheEntry(word: string, entry: DictionaryEntry, source: string): Promise<void> {
     try {
       // Cache to Redis
       await this.cacheToRedis(word, entry);
@@ -254,9 +250,11 @@ Format as JSON with this structure:
 
       // Delete from cache
       await cacheService.delete(cacheService.dictionaryKey(normalizedWord));
-      await prisma.dictionaryEntry.delete({
-        where: { word: normalizedWord },
-      }).catch(() => {});
+      await prisma.dictionaryEntry
+        .delete({
+          where: { word: normalizedWord },
+        })
+        .catch(() => {});
 
       // Fetch fresh data
       const entry = await this.searchWord(normalizedWord);

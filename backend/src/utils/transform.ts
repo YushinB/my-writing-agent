@@ -1,10 +1,6 @@
 import { User, SavedWord } from '@prisma/client';
 import { UserResponse, SavedWordResponse } from '../types/auth.types';
-import {
-  FreeDictionaryApiResponse,
-  DictionaryEntry,
-  Meaning,
-} from '../types/dictionary.types';
+import { FreeDictionaryApiResponse, DictionaryEntry, Meaning } from '../types/dictionary.types';
 
 /**
  * Transform User model to UserResponse (remove password)
@@ -48,9 +44,7 @@ export function transformFreeDictionaryResponse(
 ): DictionaryEntry {
   // Extract the main phonetic
   const phonetic =
-    apiResponse.phonetic ||
-    apiResponse.phonetics?.find((p) => p.text)?.text ||
-    undefined;
+    apiResponse.phonetic || apiResponse.phonetics?.find((p) => p.text)?.text || undefined;
 
   // Extract phonetics with audio
   const phonetics = apiResponse.phonetics
@@ -69,10 +63,8 @@ export function transformFreeDictionaryResponse(
       synonyms: def.synonyms && def.synonyms.length > 0 ? def.synonyms : undefined,
       antonyms: def.antonyms && def.antonyms.length > 0 ? def.antonyms : undefined,
     })),
-    synonyms:
-      meaning.synonyms && meaning.synonyms.length > 0 ? meaning.synonyms : undefined,
-    antonyms:
-      meaning.antonyms && meaning.antonyms.length > 0 ? meaning.antonyms : undefined,
+    synonyms: meaning.synonyms && meaning.synonyms.length > 0 ? meaning.synonyms : undefined,
+    antonyms: meaning.antonyms && meaning.antonyms.length > 0 ? meaning.antonyms : undefined,
   }));
 
   return {
@@ -120,7 +112,10 @@ export function calculateOffset(page: number, limit: number): number {
  * @param includeStack - Whether to include stack trace (dev only)
  * @returns Sanitized error message
  */
-export function sanitizeError(error: unknown, includeStack = false): {
+export function sanitizeError(
+  error: unknown,
+  includeStack = false
+): {
   message: string;
   stack?: string;
 } {
@@ -158,12 +153,7 @@ export function createSuccessResponse<T>(data: T, message?: string) {
  * @param stack - Optional stack trace
  * @returns Formatted API error response
  */
-export function createErrorResponse(
-  code: string,
-  message: string,
-  details?: any,
-  stack?: string
-) {
+export function createErrorResponse(code: string, message: string, details?: any, stack?: string) {
   return {
     success: false as const,
     error: {
@@ -184,12 +174,7 @@ export function createErrorResponse(
  * @param limit - Items per page
  * @returns Formatted paginated response
  */
-export function createPaginatedResponse<T>(
-  data: T[],
-  total: number,
-  page: number,
-  limit: number
-) {
+export function createPaginatedResponse<T>(data: T[], total: number, page: number, limit: number) {
   return {
     success: true as const,
     data,

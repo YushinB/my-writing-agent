@@ -11,11 +11,7 @@ router.use(authenticate);
 
 router.get('/', settingsController.getSettings);
 
-router.patch(
-  '/',
-  validateBody(userSettingsSchema),
-  settingsController.updateSettings
-);
+router.patch('/', validateBody(userSettingsSchema), settingsController.updateSettings);
 
 router.post('/reset', settingsController.resetSettings);
 

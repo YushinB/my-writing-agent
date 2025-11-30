@@ -16,17 +16,9 @@ const router = Router();
 router.use(authenticate);
 router.use(llmRateLimiter);
 
-router.post(
-  '/correct',
-  validateBody(correctTextSchema),
-  llmController.correctText
-);
+router.post('/correct', validateBody(correctTextSchema), llmController.correctText);
 
-router.post(
-  '/define',
-  validateBody(defineWordSchema),
-  llmController.defineWord
-);
+router.post('/define', validateBody(defineWordSchema), llmController.defineWord);
 
 router.post(
   '/suggestions',
@@ -34,10 +26,6 @@ router.post(
   llmController.generateSuggestions
 );
 
-router.post(
-  '/analyze',
-  validateBody(analyzeWritingStyleSchema),
-  llmController.analyzeWritingStyle
-);
+router.post('/analyze', validateBody(analyzeWritingStyleSchema), llmController.analyzeWritingStyle);
 
 export default router;
