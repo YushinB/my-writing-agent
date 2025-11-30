@@ -470,26 +470,26 @@
 
 ### 17. Express App Setup ⏱️ 2-3 hours
 
-- [ ] **17.1** Create Express app
-  - [ ] Create `src/app.ts`
-  - [ ] Initialize Express
-  - [ ] Add body parser middleware
-  - [ ] Add CORS middleware
-  - [ ] Add Morgan logging middleware
-  - [ ] Add rate limiting middleware
-  - [ ] Register routes
-  - [ ] Add 404 handler
-  - [ ] Add error handler middleware
-  - [ ] Export app
+- [x] **17.1** Create Express app
+  - [x] Create `src/app.ts`
+  - [x] Initialize Express
+  - [x] Add body parser middleware
+  - [x] Add CORS middleware
+  - [x] Add Morgan logging middleware
+  - [x] Add rate limiting middleware
+  - [x] Register routes
+  - [x] Add 404 handler
+  - [x] Add error handler middleware
+  - [x] Export app
 
-- [ ] **17.2** Create server entry point
-  - [ ] Create `src/server.ts`
-  - [ ] Import app
-  - [ ] Connect to database
-  - [ ] Connect to Redis
-  - [ ] Start HTTP server
-  - [ ] Add graceful shutdown
-  - [ ] Handle SIGTERM/SIGINT
+- [x] **17.2** Create server entry point
+  - [x] Create `src/server.ts`
+  - [x] Import app
+  - [x] Connect to database
+  - [x] Connect to Redis
+  - [x] Start HTTP server
+  - [x] Add graceful shutdown
+  - [x] Handle SIGTERM/SIGINT
 
 ---
 

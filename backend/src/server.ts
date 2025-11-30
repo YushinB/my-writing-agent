@@ -2,6 +2,7 @@ import createApp from './app';
 import { env, displayEnvInfo } from './config/env';
 import { disconnectDatabase, checkDatabaseHealth } from './config/database';
 import { checkRedisHealth } from './config/redis';
+import { jobScheduler } from './jobs/scheduler';
 import logger from './utils/logger';
 
 /**
@@ -29,6 +30,10 @@ async function startServer() {
       logger.warn('⚠️  Redis connection failed - continuing without cache');
     }
 
+    // Start background jobs
+    logger.info('🔄 Starting background jobs...');
+    jobScheduler.start();
+
     // Start HTTP server
     const PORT = env.PORT;
     const server = app.listen(PORT, () => {
@@ -48,6 +53,9 @@ async function startServer() {
         logger.info('✅ HTTP server closed');
 
         try {
+          // Stop background jobs
+          jobScheduler.stop();
+
           // Disconnect from database
           await disconnectDatabase();
 
