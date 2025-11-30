@@ -1,0 +1,123 @@
+// Prisma Schema for ProsePolish Backend
+// Database: PostgreSQL
+// ORM: Prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// User Model
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  savedWords SavedWord[]
+  settings   UserSettings?
+  aiUsageLogs AIUsageLog[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// Saved Words Model (User's Personal Dictionary)
+model SavedWord {
+  id        String   @id @default(uuid())
+  userId    String
+  word      String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, word])
+  @@index([userId])
+  @@index([word])
+  @@map("saved_words")
+}
+
+// Dictionary Entry Model (Cached Dictionary Data)
+model DictionaryEntry {
+  id          String   @id @default(uuid())
+  word        String   @unique
+  phonetic    String?
+  meanings    Json     // Array of meanings with definitions, examples, synonyms
+  origin      String?
+  source      String   // "free_dictionary_api" or "gemini_ai"
+  cachedAt    DateTime @default(now())
+  lastAccessed DateTime @default(now())
+  accessCount Int      @default(0)
+  expiresAt   DateTime?
+
+  @@index([word])
+  @@index([lastAccessed])
+  @@index([expiresAt])
+  @@map("dictionary_entries")
+}
+
+// User Settings Model
+model UserSettings {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+
+  // LLM Preferences
+  llmModel  String   @default("gemini-2.0-flash-exp")
+
+  // Dictionary Preferences
+  preferredLanguage String @default("en")
+
+  // UI Preferences
+  theme     String   @default("light")
+
+  // Notification Preferences
+  emailNotifications Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_settings")
+}
+
+// AI Usage Log Model (Track API calls for billing/monitoring)
+model AIUsageLog {
+  id            String   @id @default(uuid())
+  userId        String
+  operation     String   // "correct_text", "define_word", "generate_suggestions", "analyze_style"
+  inputTokens   Int      @default(0)
+  outputTokens  Int      @default(0)
+  totalTokens   Int      @default(0)
+  model         String
+  cached        Boolean  @default(false)
+  costEstimate  Float?
+  createdAt     DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([operation])
+  @@map("ai_usage_logs")
+}
