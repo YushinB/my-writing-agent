@@ -16,6 +16,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:verbose": "jest --verbose",
+    "test:dictionary": "ts-node src/test-dictionary.ts",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
@@ -40,7 +41,7 @@
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@prisma/client": "^7.0.1",
+    "@prisma/client": "^6.19.0",
     "@types/uuid": "^10.0.0",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",

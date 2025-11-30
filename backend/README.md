@@ -4,6 +4,29 @@ AI-Powered Writing Assistant Backend - Express.js + Prisma + PostgreSQL + Redis 
 
 ---
 
+## ⚡ Quick Start Commands
+
+```bash
+# 1. Check Docker containers
+docker ps
+
+# 2. Start services (if not running)
+docker-compose up -d
+
+# 3. Install dependencies (first time only)
+npm install
+
+# 4. Setup database (first time only)
+npm run db:generate && npm run db:migrate
+
+# 5. Start development server
+npm run dev
+```
+
+Server will be available at: **http://localhost:5000/api/v1**
+
+---
+
 ## 📚 Documentation
 
 - **[DESIGN.md](DESIGN.md)** - Complete API design and architecture
@@ -67,7 +90,258 @@ npm run db:seed
 npm run dev
 ```
 
-Server will start at `http://localhost:3001`
+Server will start at `http://localhost:5000`
+
+---
+
+## 🚀 Quick Deployment Guide (First Time Setup)
+
+This guide covers the complete setup process including common issues and their solutions.
+
+### Step 1: Check Prerequisites
+
+```bash
+# Verify Docker is installed
+docker --version
+
+# Verify Node.js is installed (18+)
+node --version
+
+# Verify npm is installed
+npm --version
+```
+
+### Step 2: Start PostgreSQL and Redis
+
+If you already have containers running:
+```bash
+# Check for existing containers
+docker ps -a
+
+# If you see prosepolish_postgres and prosepolish_redis running, you're good!
+# Otherwise, start them:
+docker run -d --name prosepolish_postgres \
+  -p 5432:5432 \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=password \
+  -e POSTGRES_DB=prosepolish_db \
+  postgres:16-alpine
+
+docker run -d --name prosepolish_redis \
+  -p 6379:6379 \
+  redis:7-alpine
+```
+
+**Or use docker-compose:**
+```bash
+docker-compose up -d
+```
+
+### Step 3: Verify Services Are Running
+
+```bash
+# Check containers are healthy
+docker ps
+
+# You should see both containers with status "Up" and "healthy"
+# Example output:
+# CONTAINER ID   IMAGE                STATUS                   PORTS
+# 3f057708c240   postgres:16-alpine   Up 5 minutes (healthy)   0.0.0.0:5432->5432/tcp
+# 522c768038a5   redis:7-alpine       Up 5 minutes (healthy)   0.0.0.0:6379->6379/tcp
+```
+
+### Step 4: Install Dependencies
+
+```bash
+npm install
+```
+
+### Step 5: Configure Environment
+
+```bash
+# Copy example env file
+cp .env.example .env
+
+# Edit .env and ensure these values match your Docker setup:
+# DATABASE_URL=postgresql://postgres:password@localhost:5432/prosepolish_db?schema=public
+# REDIS_HOST=localhost
+# REDIS_PORT=6379
+# Add your GEMINI_API_KEY if you have one
+```
+
+### Step 6: Setup Database
+
+```bash
+# Generate Prisma client
+npm run db:generate
+
+# Run migrations
+npm run db:migrate
+
+# (Optional) Seed database with sample data
+npm run db:seed
+```
+
+### Step 7: Start Development Server
+
+```bash
+npm run dev
+```
+
+You should see:
+```
+✅ Gemini AI client initialized
+✅ Database connected successfully
+✅ Redis connected successfully
+🚀 Server started successfully!
+📡 Listening on port 5000
+📝 API: http://localhost:5000/api/v1
+💚 Health: http://localhost:5000/api/v1/health
+```
+
+### Step 8: Verify Server is Running
+
+```bash
+# Test health endpoint
+curl http://localhost:5000/api/v1/health
+
+# Or open in browser:
+# http://localhost:5000/api/v1/health
+```
+
+---
+
+## 🔧 Common Issues & Solutions
+
+### Issue 1: TypeScript Compilation Error - Property 'userId' does not exist
+
+**Error:**
+```
+error TS2339: Property 'userId' does not exist on type 'Request'
+```
+
+**Solution:**
+This is already fixed in `tsconfig.json`, but if you encounter it:
+
+1. Ensure `tsconfig.json` has these settings:
+```json
+{
+  "compilerOptions": {
+    ...
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node", "jest"]
+  },
+  "ts-node": {
+    "files": true
+  }
+}
+```
+
+2. The type declarations are in `src/types/express.d.ts` and should extend the Express Request type.
+
+### Issue 2: Port Already in Use
+
+**Error:**
+```
+Error: listen EADDRINUSE: address already in use :::5432
+Error: listen EADDRINUSE: address already in use :::6379
+```
+
+**Solution:**
+```bash
+# Check what's using the ports
+docker ps
+
+# If you have existing containers with different names:
+docker stop <container-id>
+docker rm <container-id>
+
+# Or use the existing containers if they have the correct configuration
+```
+
+### Issue 3: Database Connection Failed
+
+**Error:**
+```
+Can't reach database server at localhost:5432
+```
+
+**Solutions:**
+```bash
+# 1. Check if PostgreSQL is running
+docker ps | grep postgres
+
+# 2. Check PostgreSQL logs
+docker logs prosepolish_postgres
+
+# 3. Verify DATABASE_URL in .env matches Docker config
+cat .env | grep DATABASE_URL
+
+# 4. Restart PostgreSQL container
+docker restart prosepolish_postgres
+
+# 5. Wait 5-10 seconds for PostgreSQL to be ready
+sleep 10
+```
+
+### Issue 4: Redis Connection Failed
+
+**Error:**
+```
+❌ Redis connection error
+Connection is closed
+```
+
+**Solutions:**
+```bash
+# 1. Check if Redis is running
+docker ps | grep redis
+
+# 2. Check Redis logs
+docker logs prosepolish_redis
+
+# 3. Restart Redis container
+docker restart prosepolish_redis
+
+# 4. Test Redis connection
+docker exec -it prosepolish_redis redis-cli ping
+# Should respond: PONG
+```
+
+### Issue 5: Server Exits Immediately Without Error
+
+**Possible causes:**
+1. Check `logs/exceptions.log` for TypeScript compilation errors
+2. Missing environment variables
+3. Database or Redis not ready
+
+**Solution:**
+```bash
+# Check exception logs
+tail -50 logs/exceptions.log
+
+# Check if .env file exists and has required variables
+cat .env
+
+# Ensure services are ready
+docker ps
+```
+
+### Issue 6: Prisma Client Not Generated
+
+**Error:**
+```
+Cannot find module '@prisma/client'
+```
+
+**Solution:**
+```bash
+# Generate Prisma client
+npm run db:generate
+
+# If that fails, try:
+npx prisma generate
+```
 
 ---
 
@@ -288,7 +562,7 @@ docker-compose down -v
 docker build -t prosepolish-backend .
 
 # Run production container
-docker run -p 3001:3001 --env-file .env prosepolish-backend
+docker run -p 5000:5000 --env-file .env prosepolish-backend
 ```
 
 ---
@@ -310,7 +584,7 @@ docker run -p 3001:3001 --env-file .env prosepolish-backend
 ### Health Check
 
 ```bash
-curl http://localhost:3001/api/health
+curl http://localhost:5000/api/v1/health
 ```
 
 Response:

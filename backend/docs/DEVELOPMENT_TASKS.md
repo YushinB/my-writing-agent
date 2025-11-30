@@ -300,25 +300,25 @@
 
 ### 11. Dictionary Service ⏱️ 6-8 hours
 
-- [ ] **11.1** Create Free Dictionary API service
-  - [ ] Create `src/services/freeDictionary.service.ts`
-  - [ ] Implement fetchWordDefinition
-  - [ ] Add axios retry logic
-  - [ ] Transform API response to our schema
-  - [ ] Handle 404 errors
-  - [ ] Add request delay (respectful rate limiting)
+- [x] **11.1** Create Free Dictionary API service
+  - [x] Create `src/services/freeDictionary.service.ts`
+  - [x] Implement fetchWordDefinition
+  - [x] Add axios retry logic
+  - [x] Transform API response to our schema
+  - [x] Handle 404 errors
+  - [x] Add request delay (respectful rate limiting)
 
-- [ ] **11.2** Create dictionary service
-  - [ ] Create `src/services/dictionary.service.ts`
-  - [ ] Implement multi-layer caching lookup:
+- [x] **11.2** Create dictionary service
+  - [x] Create `src/services/dictionary.service.ts`
+  - [x] Implement multi-layer caching lookup:
     - Layer 1: Check Redis cache
     - Layer 2: Check PostgreSQL cache
     - Layer 3: Query Free Dictionary API
     - Layer 4: Fallback to Gemini AI
-  - [ ] Implement searchDictionary
-  - [ ] Implement addWordToDictionary (admin)
-  - [ ] Implement refreshCacheEntry (admin)
-  - [ ] Add cache invalidation
+  - [x] Implement searchDictionary
+  - [x] Implement addWordToDictionary (admin)
+  - [x] Implement refreshCacheEntry (admin)
+  - [x] Add cache invalidation
 
 ---
 
