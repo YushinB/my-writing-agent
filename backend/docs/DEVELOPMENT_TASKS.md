@@ -420,49 +420,49 @@
 
 ### 16. Routes Implementation ⏱️ 3-4 hours
 
-- [ ] **16.1** Create auth routes
-  - [ ] Create `src/routes/auth.routes.ts`
-  - [ ] POST /auth/register
-  - [ ] POST /auth/login
-  - [ ] POST /auth/refresh
-  - [ ] POST /auth/logout (protected)
-  - [ ] GET /auth/me (protected)
+- [x] **16.1** Create auth routes
+  - [x] Create `src/routes/auth.routes.ts`
+  - [x] POST /auth/register
+  - [x] POST /auth/login
+  - [x] POST /auth/refresh
+  - [x] POST /auth/logout (protected)
+  - [x] GET /auth/me (protected)
 
-- [ ] **16.2** Create dictionary routes
-  - [ ] Create `src/routes/dictionary.routes.ts`
-  - [ ] GET /dictionary/search (protected)
-  - [ ] GET /dictionary/word/:word (protected)
-  - [ ] GET /dictionary/word/:word/full (protected)
-  - [ ] POST /dictionary/words (admin)
+- [x] **16.2** Create dictionary routes
+  - [x] Create `src/routes/dictionary.routes.ts`
+  - [x] GET /dictionary/search (protected)
+  - [x] GET /dictionary/word/:word (protected)
+  - [x] GET /dictionary/word/:word/full (protected)
+  - [x] POST /dictionary/words (admin)
 
-- [ ] **16.3** Create my words routes
-  - [ ] Create `src/routes/myWords.routes.ts`
-  - [ ] GET /my-words (protected)
-  - [ ] POST /my-words (protected)
-  - [ ] DELETE /my-words/:id (protected)
-  - [ ] GET /my-words/search (protected)
+- [x] **16.3** Create my words routes
+  - [x] Create `src/routes/myWords.routes.ts`
+  - [x] GET /my-words (protected)
+  - [x] POST /my-words (protected)
+  - [x] DELETE /my-words/:id (protected)
+  - [x] GET /my-words/search (protected)
 
-- [ ] **16.4** Create LLM routes
-  - [ ] Create `src/routes/llm.routes.ts`
-  - [ ] POST /llm/correct (protected, rate-limited)
-  - [ ] POST /llm/define (protected, rate-limited)
-  - [ ] POST /llm/suggest (protected, rate-limited)
-  - [ ] POST /llm/analyze (protected, rate-limited)
+- [x] **16.4** Create LLM routes
+  - [x] Create `src/routes/llm.routes.ts`
+  - [x] POST /llm/correct (protected, rate-limited)
+  - [x] POST /llm/define (protected, rate-limited)
+  - [x] POST /llm/suggest (protected, rate-limited)
+  - [x] POST /llm/analyze (protected, rate-limited)
 
-- [ ] **16.5** Create settings routes
-  - [ ] Create `src/routes/settings.routes.ts`
-  - [ ] GET /settings (protected)
-  - [ ] PATCH /settings (protected)
+- [x] **16.5** Create settings routes
+  - [x] Create `src/routes/settings.routes.ts`
+  - [x] GET /settings (protected)
+  - [x] PATCH /settings (protected)
 
-- [ ] **16.6** Create health routes
-  - [ ] Create `src/routes/health.routes.ts`
-  - [ ] GET /health (public)
+- [x] **16.6** Create health routes
+  - [x] Create `src/routes/health.routes.ts`
+  - [x] GET /health (public)
 
-- [ ] **16.7** Create main router
-  - [ ] Create `src/routes/index.ts`
-  - [ ] Combine all sub-routers
-  - [ ] Add /api prefix
-  - [ ] Add versioning support
+- [x] **16.7** Create main router
+  - [x] Create `src/routes/index.ts`
+  - [x] Combine all sub-routers
+  - [x] Add /api prefix
+  - [x] Add versioning support
 
 ---
 

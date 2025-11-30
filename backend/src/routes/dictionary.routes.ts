@@ -14,6 +14,8 @@ router.get('/search', validateQuery(dictionarySearchSchema), dictionaryControlle
 
 router.get('/word/:word', dictionaryController.getWordDefinition);
 
+router.get('/word/:word/full', dictionaryController.getFullWordData);
+
 router.get('/popular', dictionaryController.getPopularWords);
 
 // Admin only routes
