@@ -20,7 +20,8 @@ router.use(`${API_VERSION}/settings`, settingsRoutes);
 router.use(`${API_VERSION}/health`, healthRoutes);
 
 // Root health check (no version prefix)
-router.get('/health', (req, res) => {
+router.get('/health', (_req, res) => {
+  void _req;
   res.json({
     status: 'ok',
     message: 'ProsePolish API is running',

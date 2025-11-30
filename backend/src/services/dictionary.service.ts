@@ -276,7 +276,7 @@ Format as JSON with this structure:
    */
   async getPopularWords(limit: number = 10): Promise<string[]> {
     try {
-      const entries = await prisma.dictionaryEntry.findMany({
+      const entries: { word: string }[] = await prisma.dictionaryEntry.findMany({
         orderBy: { accessCount: 'desc' },
         take: limit,
         select: { word: true },

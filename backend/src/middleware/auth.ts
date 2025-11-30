@@ -8,7 +8,8 @@ import { UserRole } from '@prisma/client';
 /**
  * Authentication middleware - Verify JWT token and attach user to request
  */
-export async function authenticate(req: Request, res: Response, next: NextFunction) {
+export async function authenticate(req: Request, _res: Response, next: NextFunction) {
+  void _res;
   try {
     // Extract token from Authorization header
     const authHeader = req.headers.authorization;
@@ -54,9 +55,10 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
  */
 export async function optionalAuthenticate(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) {
+  void _res;
   try {
     const authHeader = req.headers.authorization;
 
@@ -86,7 +88,8 @@ export async function optionalAuthenticate(
 /**
  * Require admin role
  */
-export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+export function requireAdmin(req: Request, _res: Response, next: NextFunction) {
+  void _res;
   try {
     if (!req.user) {
       throw new UnauthorizedError('Authentication required');
@@ -106,7 +109,8 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
  * Require specific role(s)
  */
 export function requireRole(...roles: UserRole[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    void _res;
     try {
       if (!req.user) {
         throw new UnauthorizedError('Authentication required');

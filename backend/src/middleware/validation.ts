@@ -13,7 +13,8 @@ type ValidationTarget = 'body' | 'query' | 'params';
  * @param target - Which part of the request to validate (body, query, params)
  */
 export function validate<T>(schema: z.ZodSchema<T>, target: ValidationTarget = 'body') {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    void _res;
     try {
       // Get the data to validate based on target
       let data: unknown;
@@ -99,7 +100,8 @@ export function validateMultiple(schemas: {
   query?: z.ZodSchema<any>;
   params?: z.ZodSchema<any>;
 }) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
+    void _res;
     try {
       const errors: any[] = [];
 

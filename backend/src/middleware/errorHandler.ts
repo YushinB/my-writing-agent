@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AppError, ErrorCode } from '../utils/errors';
 import { createErrorResponse } from '../utils/transform';
 import logger from '../utils/logger';
-import { env, isDevelopment } from '../config/env';
+import { isDevelopment } from '../config/env';
 import { Prisma } from '@prisma/client';
 
 /**
@@ -16,6 +16,7 @@ export function errorHandler(
   next: NextFunction
 ) {
   // Log the error
+  void next;
   logger.error('Error occurred:', {
     message: error.message,
     stack: error.stack,

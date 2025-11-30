@@ -9,9 +9,9 @@ import { asyncHandler } from '../middleware/errorHandler';
  * Health check endpoint
  * GET /api/health
  */
-export const healthCheck = asyncHandler(async (req: Request, res: Response) => {
+export const healthCheck = asyncHandler(async (_req: Request, res: Response) => {
   const startTime = Date.now();
-
+  void _req;
   // Check services
   const [dbHealthy, redisHealthy, geminiHealthy] = await Promise.all([
     checkDatabaseHealth(),
@@ -43,7 +43,8 @@ export const healthCheck = asyncHandler(async (req: Request, res: Response) => {
  * Readiness check (for Kubernetes)
  * GET /api/health/ready
  */
-export const readinessCheck = asyncHandler(async (req: Request, res: Response) => {
+export const readinessCheck = asyncHandler(async (_req: Request, res: Response) => {
+  void _req;
   const dbHealthy = await checkDatabaseHealth();
   const redisHealthy = await checkRedisHealth();
 
@@ -58,6 +59,7 @@ export const readinessCheck = asyncHandler(async (req: Request, res: Response) =
  * Liveness check (for Kubernetes)
  * GET /api/health/live
  */
-export const livenessCheck = asyncHandler(async (req: Request, res: Response) => {
+export const livenessCheck = asyncHandler(async (_req: Request, res: Response) => {
+  void _req;
   res.json(createSuccessResponse({ alive: true }));
 });

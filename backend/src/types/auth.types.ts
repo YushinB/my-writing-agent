@@ -42,6 +42,16 @@ export interface UserResponse {
   updatedAt: Date;
 }
 
+// Saved word response (for user's saved words)
+export interface SavedWordResponse {
+  id: string;
+  userId: string;
+  word: string;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Refresh token request
 export interface RefreshTokenRequest {
   refreshToken: string;

@@ -1,7 +1,6 @@
 import { prisma } from '../config/database';
 import { cacheService } from './cache.service';
 import { UserSettings } from '@prisma/client';
-import { NotFoundError } from '../utils/errors';
 import logger from '../utils/logger';
 
 /**

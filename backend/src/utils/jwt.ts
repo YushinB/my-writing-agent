@@ -11,11 +11,15 @@ import { TokenExpiredError, TokenInvalidError } from './errors';
  */
 export function generateAccessToken(payload: TokenPayload): string {
   try {
-    const token = jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-      expiresIn: env.JWT_ACCESS_EXPIRY,
-      issuer: 'prosepolish-api',
-      audience: 'prosepolish-app',
-    });
+    const token = jwt.sign(
+      payload as object,
+      env.JWT_ACCESS_SECRET as jwt.Secret,
+      {
+        expiresIn: env.JWT_ACCESS_EXPIRY,
+        issuer: 'prosepolish-api',
+        audience: 'prosepolish-app',
+      } as jwt.SignOptions
+    );
     return token;
   } catch (error) {
     logger.error('Error generating access token:', error);
@@ -30,11 +34,15 @@ export function generateAccessToken(payload: TokenPayload): string {
  */
 export function generateRefreshToken(payload: TokenPayload): string {
   try {
-    const token = jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-      expiresIn: env.JWT_REFRESH_EXPIRY,
-      issuer: 'prosepolish-api',
-      audience: 'prosepolish-app',
-    });
+    const token = jwt.sign(
+      payload as object,
+      env.JWT_REFRESH_SECRET as jwt.Secret,
+      {
+        expiresIn: env.JWT_REFRESH_EXPIRY,
+        issuer: 'prosepolish-api',
+        audience: 'prosepolish-app',
+      } as jwt.SignOptions
+    );
     return token;
   } catch (error) {
     logger.error('Error generating refresh token:', error);

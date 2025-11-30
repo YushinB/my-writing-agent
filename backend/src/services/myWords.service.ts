@@ -164,7 +164,6 @@ class MyWordsService {
   async searchWords(userId: string, query: string, page: number = 1, limit: number = 10) {
     try {
       const offset = calculateOffset(page, limit);
-      const searchTerm = `%${query.toLowerCase()}%`;
 
       // Get total count
       const total = await prisma.savedWord.count({

@@ -28,7 +28,7 @@
     "db:seed": "ts-node prisma/seed.ts",
     "db:reset": "prisma migrate reset",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
     "prebuild": "npm run clean && npm run typecheck",
     "prepare": "npm run db:generate"
   },
@@ -41,6 +41,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^7.0.1",
+    "@types/uuid": "^10.0.0",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
@@ -52,6 +53,7 @@
     "morgan": "^1.10.1",
     "node-cron": "^4.2.1",
     "rate-limit-redis": "^4.3.0",
+    "uuid": "^13.0.0",
     "winston": "^3.18.3",
     "zod": "^4.1.13"
   },

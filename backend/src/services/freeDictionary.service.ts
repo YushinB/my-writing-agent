@@ -5,7 +5,7 @@ import {
   DictionaryEntry,
 } from '../types/dictionary.types';
 import { transformFreeDictionaryResponse } from '../utils/transform';
-import { ExternalApiError, NotFoundError } from '../utils/errors';
+import { ExternalApiError } from '../utils/errors';
 import logger from '../utils/logger';
 
 /**

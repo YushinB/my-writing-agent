@@ -1,7 +1,7 @@
 import createApp from './app';
 import { env, displayEnvInfo } from './config/env';
-import { prisma, disconnectDatabase, checkDatabaseHealth } from './config/database';
-import { redis, checkRedisHealth } from './config/redis';
+import { disconnectDatabase, checkDatabaseHealth } from './config/database';
+import { checkRedisHealth } from './config/redis';
 import logger from './utils/logger';
 
 /**

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as dictionaryController from '../controllers/dictionary.controller';
 import { authenticate, requireAdmin } from '../middleware/auth';
-import { validateBody, validateQuery } from '../middleware/validation';
+import { validateQuery } from '../middleware/validation';
 import { dictionarySearchSchema } from '../utils/validation';
 
 const router = Router();

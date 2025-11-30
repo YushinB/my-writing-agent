@@ -1,8 +1,5 @@
 import { User, SavedWord } from '@prisma/client';
-import {
-  UserResponse,
-  SavedWordResponse,
-} from '../types/auth.types';
+import { UserResponse, SavedWordResponse } from '../types/auth.types';
 import {
   FreeDictionaryApiResponse,
   DictionaryEntry,

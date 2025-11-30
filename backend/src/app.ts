@@ -4,7 +4,7 @@ import corsMiddleware from './middleware/cors';
 import { generalRateLimiter } from './middleware/rateLimiter';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import routes from './routes';
-import { env, isDevelopment } from './config/env';
+import { isDevelopment } from './config/env';
 import logger from './utils/logger';
 
 /**
@@ -43,7 +43,8 @@ function createApp(): Application {
   app.use('/api', routes);
 
   // Root endpoint
-  app.get('/', (req, res) => {
+  app.get('/', (_req, res) => {
+    void _req;
     res.json({
       name: 'ProsePolish API',
       version: '1.0.0',

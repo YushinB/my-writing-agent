@@ -10,15 +10,9 @@ import logger from '../utils/logger';
  * Custom rate limit handler
  */
 const rateLimitHandler = (req: Request, res: Response) => {
+  console.log('Rate limit exceeded for IP:', res.req?.ip, 'Path:', req.path);
   logger.warn(`Rate limit exceeded for IP: ${req.ip}, Path: ${req.path}`);
   throw new RateLimitError('Too many requests, please try again later');
-};
-
-/**
- * Skip rate limiting for successful requests (only count failed attempts)
- */
-const skipSuccessfulRequests = (req: Request, res: Response) => {
-  return res.statusCode < 400;
 };
 
 /**
