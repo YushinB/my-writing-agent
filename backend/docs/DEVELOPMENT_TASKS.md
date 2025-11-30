@@ -337,34 +337,34 @@
 
 ### 13. LLM Service ⏱️ 6-8 hours
 
-- [ ] **13.1** Create LLM service
-  - [ ] Create `src/services/llm.service.ts`
-  - [ ] Implement correctText
+- [x] **13.1** Create LLM service
+  - [x] Create `src/services/llm.service.ts`
+  - [x] Implement correctText
     - Generate cache key (hash of input)
     - Check Redis cache
     - Call Gemini API if cache miss
     - Parse AI response
     - Cache result
     - Track usage in AIUsageLog
-  - [ ] Implement defineWord
+  - [x] Implement defineWord
     - Use Gemini for obscure words
     - Return structured definition
-  - [ ] Implement generateSuggestions
-  - [ ] Implement analyzeWritingStyle
-  - [ ] Create prompt templates for each function
-  - [ ] Add error handling for API failures
-  - [ ] Implement retry logic
+  - [x] Implement generateSuggestions
+  - [x] Implement analyzeWritingStyle
+  - [x] Create prompt templates for each function
+  - [x] Add error handling for API failures
+  - [x] Implement retry logic
 
 ---
 
 ### 14. Settings Service ⏱️ 2 hours
 
-- [ ] **14.1** Create settings service
-  - [ ] Create `src/services/settings.service.ts`
-  - [ ] Implement getUserSettings
-  - [ ] Implement updateUserSettings
-  - [ ] Auto-create settings on user registration
-  - [ ] Add Redis caching
+- [x] **14.1** Create settings service
+  - [x] Create `src/services/settings.service.ts`
+  - [x] Implement getUserSettings
+  - [x] Implement updateUserSettings
+  - [x] Auto-create settings on user registration
+  - [x] Add Redis caching
 
 ---
 

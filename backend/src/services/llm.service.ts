@@ -18,17 +18,50 @@ import crypto from 'crypto';
 
 /**
  * LLM Service
- * Handles AI-powered text processing using Gemini AI
+ * Handles AI-powered text processing using Gemini AI with retry logic
  */
 class LLMService {
   private readonly CACHE_TTL = env.CACHE_TTL_LLM;
   private readonly MODEL_NAME = env.GEMINI_MODEL;
+  private readonly MAX_RETRIES = 3;
+  private readonly RETRY_DELAY = 1000; // 1 second
 
   /**
    * Generate cache hash for input
    */
   private generateHash(input: string): string {
     return crypto.createHash('sha256').update(input).digest('hex').substring(0, 16);
+  }
+
+  /**
+   * Retry wrapper for Gemini API calls with exponential backoff
+   */
+  private async withRetry<T>(
+    operation: () => Promise<T>,
+    operationName: string
+  ): Promise<T> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error as Error;
+        logger.warn(
+          `${operationName} failed (attempt ${attempt}/${this.MAX_RETRIES}):`,
+          error
+        );
+
+        if (attempt < this.MAX_RETRIES) {
+          // Exponential backoff
+          const delay = this.RETRY_DELAY * Math.pow(2, attempt - 1);
+          logger.info(`Retrying in ${delay}ms...`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    throw lastError || new Error(`${operationName} failed after ${this.MAX_RETRIES} attempts`);
   }
 
   /**
@@ -53,15 +86,17 @@ class LLMService {
       // Generate prompt
       const prompt = this.createCorrectionPrompt(request);
 
-      // Call Gemini AI
-      const model = getGeminiModel();
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: generationConfig.textCorrection,
-      });
+      // Call Gemini AI with retry logic
+      const text = await this.withRetry(async () => {
+        const model = getGeminiModel();
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: generationConfig.textCorrection,
+        });
 
-      const response = await result.response;
-      const text = response.text();
+        const response = await result.response;
+        return response.text();
+      }, 'Text correction');
 
       // Parse response
       const correctedText = this.parseCorrectionResponse(text, request.text);
@@ -114,14 +149,16 @@ Format as JSON:
   "partOfSpeech": "noun/verb/etc"
 }`;
 
-      const model = getGeminiModel();
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: generationConfig.definition,
-      });
+      const text = await this.withRetry(async () => {
+        const model = getGeminiModel();
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: generationConfig.definition,
+        });
 
-      const response = await result.response;
-      const text = response.text();
+        const response = await result.response;
+        return response.text();
+      }, 'Word definition');
 
       // Parse JSON
       const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -180,14 +217,16 @@ Format as JSON:
           break;
       }
 
-      const model = getGeminiModel();
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: generationConfig.suggestions,
-      });
+      const text = await this.withRetry(async () => {
+        const model = getGeminiModel();
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: generationConfig.suggestions,
+        });
 
-      const response = await result.response;
-      const text = response.text();
+        const response = await result.response;
+        return response.text();
+      }, 'Generate suggestions');
 
       // Parse suggestions
       const suggestions = text
@@ -248,14 +287,16 @@ Format as JSON:
   "suggestions": ["...", "...", "..."]
 }`;
 
-      const model = getGeminiModel();
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: generationConfig.analysis,
-      });
+      const text = await this.withRetry(async () => {
+        const model = getGeminiModel();
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: generationConfig.analysis,
+        });
 
-      const response = await result.response;
-      const text = response.text();
+        const response = await result.response;
+        return response.text();
+      }, 'Writing style analysis');
 
       // Parse AI response
       const jsonMatch = text.match(/\{[\s\S]*\}/);

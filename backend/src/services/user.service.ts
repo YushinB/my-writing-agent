@@ -1,5 +1,6 @@
 import { prisma } from '../config/database';
 import { cacheService } from './cache.service';
+import { settingsService } from './settings.service';
 import { User, UserRole } from '@prisma/client';
 import { hashPassword } from '../utils/hash';
 import { NotFoundError, ConflictError } from '../utils/errors';
@@ -51,6 +52,15 @@ class UserService {
 
       // Cache user
       await this.cacheUser(user);
+
+      // Auto-create default settings for new user
+      try {
+        await settingsService.createDefaultSettings(user.id);
+        logger.info(`Default settings created for new user ${user.id}`);
+      } catch (error) {
+        logger.warn(`Failed to create default settings for user ${user.id}:`, error);
+        // Don't fail user creation if settings creation fails
+      }
 
       return user;
     } catch (error) {
