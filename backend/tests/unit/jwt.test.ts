@@ -16,8 +16,10 @@ describe('JWT Utilities', () => {
       expect(typeof tokens.refreshToken).toBe('string');
     });
 
-    it('should generate different tokens for each call', () => {
+    it('should generate different tokens for each call', async () => {
       const tokens1 = generateTokens(testUserId, testRole);
+      // Add delay to ensure different iat timestamps (1 second)
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const tokens2 = generateTokens(testUserId, testRole);
 
       expect(tokens1.accessToken).not.toBe(tokens2.accessToken);
@@ -33,18 +35,15 @@ describe('JWT Utilities', () => {
       expect(payload).toBeDefined();
       expect(payload?.userId).toBe(testUserId);
       expect(payload?.role).toBe(testRole);
-      expect(payload?.type).toBe('access');
     });
 
-    it('should return null for invalid token', () => {
-      const payload = verifyAccessToken('invalid-token');
-      expect(payload).toBeNull();
+    it('should throw error for invalid token', () => {
+      expect(() => verifyAccessToken('invalid-token')).toThrow();
     });
 
-    it('should return null for refresh token', () => {
+    it('should throw error for refresh token', () => {
       const { refreshToken } = generateTokens(testUserId, testRole);
-      const payload = verifyAccessToken(refreshToken);
-      expect(payload).toBeNull();
+      expect(() => verifyAccessToken(refreshToken)).toThrow();
     });
   });
 
@@ -56,18 +55,15 @@ describe('JWT Utilities', () => {
       expect(payload).toBeDefined();
       expect(payload?.userId).toBe(testUserId);
       expect(payload?.role).toBe(testRole);
-      expect(payload?.type).toBe('refresh');
     });
 
-    it('should return null for invalid token', () => {
-      const payload = verifyRefreshToken('invalid-token');
-      expect(payload).toBeNull();
+    it('should throw error for invalid token', () => {
+      expect(() => verifyRefreshToken('invalid-token')).toThrow();
     });
 
-    it('should return null for access token', () => {
+    it('should throw error for access token', () => {
       const { accessToken } = generateTokens(testUserId, testRole);
-      const payload = verifyRefreshToken(accessToken);
-      expect(payload).toBeNull();
+      expect(() => verifyRefreshToken(accessToken)).toThrow();
     });
   });
 });

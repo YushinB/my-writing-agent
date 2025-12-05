@@ -2,7 +2,7 @@ import { cacheService } from './cache.service';
 import { SessionData } from '../types/auth.types';
 import { env } from '../config/env';
 import logger from '../utils/logger';
-import { v4 as uuidv4 } from 'uuid';
+const { v4: uuidv4 } = require('uuid');
 
 /**
  * Session Service

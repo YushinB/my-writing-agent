@@ -22,7 +22,10 @@ class DatabaseClient {
         })
         .catch((error: unknown) => {
           logger.error('❌ Failed to connect to database:', error);
-          process.exit(1);
+          // Don't exit in test environment to allow mocking
+          if (process.env.NODE_ENV !== 'test') {
+            process.exit(1);
+          }
         });
 
       // Handle shutdown gracefully

@@ -97,10 +97,10 @@ export class ConflictError extends AppError {
   }
 }
 
-// 422 Validation Error
+// 400 Validation / Bad Request
 export class ValidationError extends AppError {
   constructor(message = 'Validation failed', details?: any) {
-    super(message, 422, ErrorCode.VALIDATION_ERROR, true, details);
+    super(message, 400, ErrorCode.INVALID_INPUT, true, details);
   }
 }
 

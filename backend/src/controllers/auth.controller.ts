@@ -9,7 +9,13 @@ import { asyncHandler } from '../middleware/errorHandler';
  */
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.register(req.body);
-  res.status(201).json(createSuccessResponse(result, 'Registration successful'));
+  // Flatten tokens into top-level fields for client convenience
+  const response = {
+    user: result.user,
+    accessToken: result.tokens.accessToken,
+    refreshToken: result.tokens.refreshToken,
+  };
+  res.status(201).json(createSuccessResponse(response, 'Registration successful'));
 });
 
 /**
@@ -18,7 +24,12 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
  */
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.login(req.body);
-  res.json(createSuccessResponse(result, 'Login successful'));
+  const response = {
+    user: result.user,
+    accessToken: result.tokens.accessToken,
+    refreshToken: result.tokens.refreshToken,
+  };
+  res.json(createSuccessResponse(response, 'Login successful'));
 });
 
 /**
@@ -28,7 +39,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
   const tokens = await authService.refreshToken(refreshToken);
-  res.json(createSuccessResponse(tokens, 'Token refreshed'));
+  res.json(createSuccessResponse({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }, 'Token refreshed'));
 });
 
 /**

@@ -18,57 +18,69 @@ const rateLimitHandler = (req: Request, res: Response) => {
 /**
  * General rate limiter
  * Default: 100 requests per 15 minutes
+ * Disabled in test environment
  */
-export const generalRateLimiter = rateLimit({
-  windowMs: env.RATE_LIMIT_WINDOW_MS,
-  max: env.RATE_LIMIT_MAX_REQUESTS,
-  message: 'Too many requests from this IP, please try again later',
-  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
-  legacyHeaders: false, // Disable `X-RateLimit-*` headers
-  handler: rateLimitHandler,
-  store: new RedisStore({
-    // @ts-ignore - Type mismatch but works correctly
-    sendCommand: (...args: string[]) => redis.call(...args),
-    prefix: 'rl:general:',
-  }),
-});
+export const generalRateLimiter =
+  env.NODE_ENV === 'test'
+    ? (_req: Request, _res: Response, next: Function) => next()
+    : rateLimit({
+        windowMs: env.RATE_LIMIT_WINDOW_MS,
+        max: env.RATE_LIMIT_MAX_REQUESTS,
+        message: 'Too many requests from this IP, please try again later',
+        standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+        legacyHeaders: false, // Disable `X-RateLimit-*` headers
+        handler: rateLimitHandler,
+        store: new RedisStore({
+          // @ts-ignore - Type mismatch but works correctly
+          sendCommand: (...args: string[]) => redis.call(...args),
+          prefix: 'rl:general:',
+        }),
+      });
 
 /**
  * Auth rate limiter (stricter for login/register)
  * 5 requests per 15 minutes
+ * Disabled in test environment
  */
-export const authRateLimiter = rateLimit({
-  windowMs: env.RATE_LIMIT_WINDOW_MS,
-  max: env.RATE_LIMIT_AUTH_MAX,
-  message: 'Too many authentication attempts, please try again later',
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true, // Only count failed login attempts
-  handler: rateLimitHandler,
-  store: new RedisStore({
-    // @ts-ignore
-    sendCommand: (...args: string[]) => redis.call(...args),
-    prefix: 'rl:auth:',
-  }),
-});
+export const authRateLimiter =
+  env.NODE_ENV === 'test'
+    ? (_req: Request, _res: Response, next: Function) => next()
+    : rateLimit({
+        windowMs: env.RATE_LIMIT_WINDOW_MS,
+        max: env.RATE_LIMIT_AUTH_MAX,
+        message: 'Too many authentication attempts, please try again later',
+        standardHeaders: true,
+        legacyHeaders: false,
+        skipSuccessfulRequests: true, // Only count failed login attempts
+        handler: rateLimitHandler,
+        store: new RedisStore({
+          // @ts-ignore
+          sendCommand: (...args: string[]) => redis.call(...args),
+          prefix: 'rl:auth:',
+        }),
+      });
 
 /**
  * LLM/AI endpoints rate limiter
  * 20 requests per 15 minutes
+ * Disabled in test environment
  */
-export const llmRateLimiter = rateLimit({
-  windowMs: env.RATE_LIMIT_WINDOW_MS,
-  max: env.RATE_LIMIT_LLM_MAX,
-  message: 'Too many AI requests, please try again later',
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: rateLimitHandler,
-  store: new RedisStore({
-    // @ts-ignore
-    sendCommand: (...args: string[]) => redis.call(...args),
-    prefix: 'rl:llm:',
-  }),
-});
+export const llmRateLimiter =
+  env.NODE_ENV === 'test'
+    ? (_req: Request, _res: Response, next: Function) => next()
+    : rateLimit({
+        windowMs: env.RATE_LIMIT_WINDOW_MS,
+        max: env.RATE_LIMIT_LLM_MAX,
+        message: 'Too many AI requests, please try again later',
+        standardHeaders: true,
+        legacyHeaders: false,
+        handler: rateLimitHandler,
+        store: new RedisStore({
+          // @ts-ignore
+          sendCommand: (...args: string[]) => redis.call(...args),
+          prefix: 'rl:llm:',
+        }),
+      });
 
 /**
  * Per-user rate limiter

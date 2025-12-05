@@ -5,7 +5,14 @@ module.exports = {
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          esModuleInterop: true,
+        },
+      },
+    ],
   },
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -21,11 +28,5 @@ module.exports = {
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
-  globals: {
-    'ts-jest': {
-      tsconfig: {
-        esModuleInterop: true,
-      },
-    },
-  },
+  maxWorkers: 1,
 };

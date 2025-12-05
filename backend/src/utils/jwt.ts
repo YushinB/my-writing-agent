@@ -1,8 +1,28 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
-import { TokenPayload } from '../types/auth.types';
+import { TokenPayload, TokenPair } from '../types/auth.types';
+import { UserRole } from '@prisma/client';
 import logger from './logger';
 import { TokenExpiredError, TokenInvalidError } from './errors';
+
+/**
+ * Generate both access and refresh tokens
+ * @param userId - User ID
+ * @param role - User role
+ * @returns Token pair
+ */
+export function generateTokens(userId: string, role: UserRole): TokenPair {
+  const payload: TokenPayload = {
+    userId,
+    email: '', // Email will be set by the auth service
+    role,
+  };
+
+  return {
+    accessToken: generateAccessToken(payload),
+    refreshToken: generateRefreshToken(payload),
+  };
+}
 
 /**
  * Generate an access token

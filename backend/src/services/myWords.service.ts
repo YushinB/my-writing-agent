@@ -226,13 +226,15 @@ class MyWordsService {
     try {
       const offset = calculateOffset(page, limit);
 
+      const searchQuery = query.toLowerCase();
+
       // Get total count
       const total = await prisma.savedWord.count({
         where: {
           userId,
           OR: [
-            { word: { contains: query.toLowerCase() } },
-            { notes: { contains: query, mode: 'insensitive' } },
+            { word: { contains: searchQuery } },
+            { notes: { contains: searchQuery } },
           ],
         },
       });
@@ -242,8 +244,8 @@ class MyWordsService {
         where: {
           userId,
           OR: [
-            { word: { contains: query.toLowerCase() } },
-            { notes: { contains: query, mode: 'insensitive' } },
+            { word: { contains: searchQuery } },
+            { notes: { contains: searchQuery } },
           ],
         },
         orderBy: { createdAt: 'desc' },
