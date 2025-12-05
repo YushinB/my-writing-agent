@@ -34,11 +34,7 @@ async function testMyWordsService() {
     ];
 
     for (const wordData of wordsToAdd) {
-      const savedWord = await myWordsService.addWord(
-        testUserId,
-        wordData.word,
-        wordData.notes
-      );
+      const savedWord = await myWordsService.addWord(testUserId, wordData.word, wordData.notes);
       addedWordIds.push(savedWord.id);
       console.log(`✅ Added word: "${savedWord.word}" with notes`);
     }
@@ -141,7 +137,6 @@ async function testMyWordsService() {
       await myWordsService.removeWord(testUserId, wordId);
     }
     console.log('✅ Cleanup completed');
-
   } catch (error) {
     console.error('\n❌ Test failed with error:');
     console.error(error);

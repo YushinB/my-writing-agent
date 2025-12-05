@@ -22,7 +22,9 @@ async function testDictionaryService() {
       console.log(`   Phonetic: ${apiResult.phonetic || 'N/A'}`);
       console.log(`   Meanings: ${apiResult.meanings.length} found`);
       console.log(`   First meaning: ${apiResult.meanings[0].partOfSpeech}`);
-      console.log(`   First definition: ${apiResult.meanings[0].definitions[0].definition.substring(0, 80)}...`);
+      console.log(
+        `   First definition: ${apiResult.meanings[0].definitions[0].definition.substring(0, 80)}...`
+      );
     } else {
       console.log('❌ No definition found');
     }
@@ -79,7 +81,6 @@ async function testDictionaryService() {
     console.log('\n' + '='.repeat(60));
     console.log('✅ All tests completed successfully!');
     console.log('='.repeat(60) + '\n');
-
   } catch (error) {
     console.error('\n❌ Test failed with error:');
     console.error(error);

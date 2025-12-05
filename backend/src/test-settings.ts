@@ -66,10 +66,7 @@ async function testSettingsService() {
     console.log('\n🔄 Test 4: Verify Cache Was Updated');
     console.log('-'.repeat(60));
     const settingsAfterUpdate = await settingsService.getUserSettings(testUserId);
-    if (
-      settingsAfterUpdate.theme === 'dark' &&
-      settingsAfterUpdate.emailNotifications === false
-    ) {
+    if (settingsAfterUpdate.theme === 'dark' && settingsAfterUpdate.emailNotifications === false) {
       console.log('✅ Cache was properly updated with new settings');
     } else {
       console.log('⚠️ Cache might not have been updated');
@@ -145,7 +142,6 @@ async function testSettingsService() {
     console.log('\n' + '='.repeat(60));
     console.log('✅ All tests completed successfully!');
     console.log('='.repeat(60) + '\n');
-
   } catch (error) {
     console.error('\n❌ Test failed with error:');
     console.error(error);

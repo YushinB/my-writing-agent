@@ -170,7 +170,7 @@ describe('My Words Endpoints', () => {
       await deleteTestUser(user.id);
     });
 
-    it('should not delete another user\'s word', async () => {
+    it("should not delete another user's word", async () => {
       const { user: user1, accessToken: token1 } = await createTestUserWithTokens({
         email: `test-mywords-user1-${Date.now()}@example.com`,
       });
@@ -184,7 +184,7 @@ describe('My Words Endpoints', () => {
         data: {
           userId: user2.id,
           word: 'protected',
-          notes: 'User 2\'s word',
+          notes: "User 2's word",
         },
       });
 

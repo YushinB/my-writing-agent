@@ -232,10 +232,7 @@ class MyWordsService {
       const total = await prisma.savedWord.count({
         where: {
           userId,
-          OR: [
-            { word: { contains: searchQuery } },
-            { notes: { contains: searchQuery } },
-          ],
+          OR: [{ word: { contains: searchQuery } }, { notes: { contains: searchQuery } }],
         },
       });
 
@@ -243,10 +240,7 @@ class MyWordsService {
       const words = await prisma.savedWord.findMany({
         where: {
           userId,
-          OR: [
-            { word: { contains: searchQuery } },
-            { notes: { contains: searchQuery } },
-          ],
+          OR: [{ word: { contains: searchQuery } }, { notes: { contains: searchQuery } }],
         },
         orderBy: { createdAt: 'desc' },
         skip: offset,

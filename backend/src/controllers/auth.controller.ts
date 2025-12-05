@@ -39,7 +39,12 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
   const tokens = await authService.refreshToken(refreshToken);
-  res.json(createSuccessResponse({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }, 'Token refreshed'));
+  res.json(
+    createSuccessResponse(
+      { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
+      'Token refreshed'
+    )
+  );
 });
 
 /**

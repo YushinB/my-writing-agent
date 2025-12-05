@@ -36,10 +36,7 @@ class LLMService {
   /**
    * Retry wrapper for Gemini API calls with exponential backoff
    */
-  private async withRetry<T>(
-    operation: () => Promise<T>,
-    operationName: string
-  ): Promise<T> {
+  private async withRetry<T>(operation: () => Promise<T>, operationName: string): Promise<T> {
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
@@ -47,10 +44,7 @@ class LLMService {
         return await operation();
       } catch (error) {
         lastError = error as Error;
-        logger.warn(
-          `${operationName} failed (attempt ${attempt}/${this.MAX_RETRIES}):`,
-          error
-        );
+        logger.warn(`${operationName} failed (attempt ${attempt}/${this.MAX_RETRIES}):`, error);
 
         if (attempt < this.MAX_RETRIES) {
           // Exponential backoff
