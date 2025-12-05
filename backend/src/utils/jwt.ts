@@ -6,10 +6,21 @@ import logger from './logger';
 import { TokenExpiredError, TokenInvalidError } from './errors';
 
 /**
- * Generate both access and refresh tokens
- * @param userId - User ID
- * @param role - User role
- * @returns Token pair
+ * Generate both access and refresh tokens for a user
+ * @description Creates a pair of JWT tokens (access and refresh) for authenticated users.
+ * The access token is short-lived (used for API requests) while the refresh token is
+ * long-lived (used to obtain new access tokens). Both tokens include user ID and role.
+ *
+ * @param {string} userId - Unique identifier of the authenticated user
+ * @param {UserRole} role - User's role for authorization purposes (ADMIN, USER, etc.)
+ * @returns {TokenPair} Object containing access and refresh tokens
+ * @returns {string} .accessToken - Short-lived JWT token for API authentication
+ * @returns {string} .refreshToken - Long-lived JWT token for obtaining new access tokens
+ * @throws {Error} If token generation fails (invalid secrets or configuration)
+ *
+ * @example
+ * const tokens = generateTokens('user123', 'USER');
+ * // Returns: { accessToken: 'eyJhbGc...', refreshToken: 'eyJhbGc...' }
  */
 export function generateTokens(userId: string, role: UserRole): TokenPair {
   const payload: TokenPayload = {
@@ -25,9 +36,23 @@ export function generateTokens(userId: string, role: UserRole): TokenPair {
 }
 
 /**
- * Generate an access token
- * @param payload - Token payload
- * @returns Access token string
+ * Generate a short-lived access token
+ * @description Creates a JWT access token with a short expiration time (typically 15 minutes).
+ * Used for authenticating API requests. The token includes user ID and role information.
+ * Includes issuer and audience claims for security validation.
+ *
+ * @param {TokenPayload} payload - Token payload containing user info and role
+ * @param {string} payload.userId - User's unique identifier
+ * @param {UserRole} payload.role - User's authorization role
+ * @returns {string} Signed JWT access token
+ * @throws {Error} If token signing fails (e.g., invalid secret key)
+ *
+ * @example
+ * const accessToken = generateAccessToken({
+ *   userId: 'user123',
+ *   email: 'user@example.com',
+ *   role: 'USER'
+ * });
  */
 export function generateAccessToken(payload: TokenPayload): string {
   try {
@@ -48,9 +73,23 @@ export function generateAccessToken(payload: TokenPayload): string {
 }
 
 /**
- * Generate a refresh token
- * @param payload - Token payload
- * @returns Refresh token string
+ * Generate a long-lived refresh token
+ * @description Creates a JWT refresh token with a long expiration time (typically 7-30 days).
+ * Used only to obtain new access tokens and stored securely on the client. Should be refreshed
+ * periodically or when requesting a new access token.
+ *
+ * @param {TokenPayload} payload - Token payload containing user info and role
+ * @param {string} payload.userId - User's unique identifier
+ * @param {UserRole} payload.role - User's authorization role
+ * @returns {string} Signed JWT refresh token
+ * @throws {Error} If token signing fails (e.g., invalid secret key)
+ *
+ * @example
+ * const refreshToken = generateRefreshToken({
+ *   userId: 'user123',
+ *   email: 'user@example.com',
+ *   role: 'USER'
+ * });
  */
 export function generateRefreshToken(payload: TokenPayload): string {
   try {
@@ -71,9 +110,24 @@ export function generateRefreshToken(payload: TokenPayload): string {
 }
 
 /**
- * Verify an access token
- * @param token - JWT token string
- * @returns Decoded token payload
+ * Verify the validity of an access token
+ * @description Validates an access token's signature, expiration, issuer, and audience claims.
+ * Throws specific errors for expired or invalid tokens to allow proper error handling.
+ *
+ * @param {string} token - The JWT access token to verify
+ * @returns {TokenPayload} Decoded and verified token payload
+ * @throws {TokenExpiredError} If token has expired
+ * @throws {TokenInvalidError} If token signature is invalid or verification fails
+ *
+ * @example
+ * try {
+ *   const payload = verifyAccessToken(token);
+ *   console.log(payload.userId); // Authenticated user ID
+ * } catch (error) {
+ *   if (error instanceof TokenExpiredError) {
+ *     // Request new access token with refresh token
+ *   }
+ * }
  */
 export function verifyAccessToken(token: string): TokenPayload {
   try {
@@ -95,9 +149,26 @@ export function verifyAccessToken(token: string): TokenPayload {
 }
 
 /**
- * Verify a refresh token
- * @param token - JWT token string
- * @returns Decoded token payload
+ * Verify the validity of a refresh token
+ * @description Validates a refresh token's signature, expiration, issuer, and audience claims.
+ * Refresh tokens are used to obtain new access tokens without re-authentication.
+ *
+ * @param {string} token - The JWT refresh token to verify
+ * @returns {TokenPayload} Decoded and verified token payload
+ * @throws {TokenExpiredError} If token has expired
+ * @throws {TokenInvalidError} If token signature is invalid or verification fails
+ *
+ * @example
+ * try {
+ *   const payload = verifyRefreshToken(refreshToken);
+ *   const newAccessToken = generateAccessToken({
+ *     userId: payload.userId,
+ *     email: payload.email,
+ *     role: payload.role
+ *   });
+ * } catch (error) {
+ *   // Token invalid, require re-login
+ * }
  */
 export function verifyRefreshToken(token: string): TokenPayload {
   try {
@@ -119,9 +190,19 @@ export function verifyRefreshToken(token: string): TokenPayload {
 }
 
 /**
- * Decode a token without verifying (useful for debugging)
- * @param token - JWT token string
- * @returns Decoded token or null
+ * Decode a token without verification
+ * @description Decodes a JWT token without verifying its signature. Useful for debugging,
+ * extracting claims, or checking expiration before calling verify. Does not validate signature.
+ * Returns null if the token cannot be parsed as valid JWT structure.
+ *
+ * @param {string} token - The JWT token to decode
+ * @returns {TokenPayload|null} Decoded token payload or null if invalid format
+ *
+ * @example
+ * const payload = decodeToken(token);
+ * if (payload?.exp && payload.exp * 1000 < Date.now()) {
+ *   console.log('Token is expired');
+ * }
  */
 export function decodeToken(token: string): TokenPayload | null {
   try {
@@ -134,9 +215,18 @@ export function decodeToken(token: string): TokenPayload | null {
 }
 
 /**
- * Get token expiration time
- * @param token - JWT token string
- * @returns Expiration timestamp or null
+ * Get token expiration time as a Unix timestamp
+ * @description Extracts and returns the 'exp' claim from a token payload as a Unix timestamp
+ * (seconds since epoch). Used to determine when a token will expire. Returns null if the
+ * token cannot be decoded or has no exp claim.
+ *
+ * @param {string} token - The JWT token to inspect
+ * @returns {number|null} Unix timestamp (in seconds) when token expires, or null if not found
+ *
+ * @example
+ * const expirationTime = getTokenExpiration(token);
+ * const expiresInMs = expirationTime ? expirationTime * 1000 : null;
+ * const timeUntilExpiry = expiresInMs ? expiresInMs - Date.now() : 0;
  */
 export function getTokenExpiration(token: string): number | null {
   const decoded = decodeToken(token);
@@ -147,9 +237,19 @@ export function getTokenExpiration(token: string): number | null {
 }
 
 /**
- * Check if token is expired
- * @param token - JWT token string
- * @returns True if expired, false otherwise
+ * Check if a token has expired
+ * @description Compares token expiration time with current time to determine if the token
+ * is still valid. Returns true if expired or if expiration cannot be determined.
+ * Works without verifying token signature.
+ *
+ * @param {string} token - The JWT token to check
+ * @returns {boolean} True if token is expired or invalid, false if still valid
+ *
+ * @example
+ * if (isTokenExpired(accessToken)) {
+ *   // Get new access token using refresh token
+ *   const newAccessToken = generateAccessToken(refreshTokenPayload);
+ * }
  */
 export function isTokenExpired(token: string): boolean {
   const exp = getTokenExpiration(token);

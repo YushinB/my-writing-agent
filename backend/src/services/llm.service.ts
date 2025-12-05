@@ -18,7 +18,19 @@ import crypto from 'crypto';
 
 /**
  * LLM Service
- * Handles AI-powered text processing using Gemini AI with retry logic
+ * Handles AI-powered text processing using Gemini AI with retry logic and intelligent caching.
+ * Provides methods for text correction, word definitions, suggestion generation, and writing style analysis.
+ *
+ * @description This service integrates with Google's Gemini AI API to perform various NLP tasks
+ * such as grammar correction, vocabulary assistance, and writing analysis. It includes automatic
+ * retry logic with exponential backoff for API resilience and Redis caching for performance optimization.
+ *
+ * @class
+ * @example
+ * const response = await llmService.correctText(userId, {
+ *   text: "The quick broun fox",
+ *   context: "English sentence"
+ * });
  */
 class LLMService {
   private readonly CACHE_TTL = env.CACHE_TTL_LLM;
@@ -28,6 +40,12 @@ class LLMService {
 
   /**
    * Generate cache hash for input
+   * @description Creates a SHA-256 hash of the input and returns first 16 characters.
+   * Used to create cache keys for LLM responses.
+   *
+   * @param {string} input - The input string to hash
+   * @returns {string} First 16 characters of SHA-256 hash in hexadecimal format
+   * @private
    */
   private generateHash(input: string): string {
     return crypto.createHash('sha256').update(input).digest('hex').substring(0, 16);
@@ -35,6 +53,21 @@ class LLMService {
 
   /**
    * Retry wrapper for Gemini API calls with exponential backoff
+   * @description Executes an async operation with automatic retry logic. On failure, waits
+   * with exponential backoff (1s, 2s, 4s) before retrying up to MAX_RETRIES times.
+   *
+   * @template T - The type of value returned by the operation
+   * @param {() => Promise<T>} operation - The async function to execute with retry logic
+   * @param {string} operationName - Name of the operation for logging purposes
+   * @returns {Promise<T>} The result of the successful operation
+   * @throws {Error} If all retry attempts fail, throws the last error encountered
+   * @private
+   *
+   * @example
+   * const result = await this.withRetry(
+   *   () => model.generateContent(prompt),
+   *   'Text generation'
+   * );
    */
   private async withRetry<T>(operation: () => Promise<T>, operationName: string): Promise<T> {
     let lastError: Error | null = null;
@@ -59,10 +92,29 @@ class LLMService {
   }
 
   /**
-   * Correct text
-   * @param userId - User ID
-   * @param request - Correction request
-   * @returns Corrected text with changes
+   * Correct text for grammar, spelling, and punctuation errors
+   * @description Analyzes text for errors and provides corrections. Results are cached to improve
+   * performance on repeated requests for the same content. The method uses exponential backoff
+   * retry logic to handle transient API failures.
+   *
+   * @param {string} userId - Unique identifier of the user making the request
+   * @param {CorrectTextRequest} request - Contains text to correct and optional context
+   * @param {string} request.text - The text to be corrected
+   * @param {string} [request.context] - Optional context for understanding the text
+   * @returns {Promise<CorrectTextResponse>} Object containing original and corrected text
+   * @returns {string} .originalText - The input text before correction
+   * @returns {string} .correctedText - The text after grammatical and punctuation corrections
+   * @returns {Array} .changes - Array of detected corrections made
+   * @returns {Array} .suggestions - Additional improvement suggestions
+   * @returns {boolean} .cached - Whether the result came from cache
+   * @throws {AIServiceError} If text correction fails after all retries
+   *
+   * @example
+   * const result = await llmService.correctText('user123', {
+   *   text: 'She dont knows how to cooking.',
+   *   context: 'English grammar check'
+   * });
+   * // Returns: { originalText: "...", correctedText: "She doesn't know how to cook.", ... }
    */
   async correctText(userId: string, request: CorrectTextRequest): Promise<CorrectTextResponse> {
     try {
@@ -110,7 +162,31 @@ class LLMService {
   }
 
   /**
-   * Define word using AI
+   * Define word using AI with contextual understanding
+   * @description Provides comprehensive word definition including parts of speech, examples,
+   * synonyms, and antonyms. Uses AI to understand context and provide relevant definitions.
+   * Results are cached for performance.
+   *
+   * @param {string} userId - Unique identifier of the user making the request
+   * @param {DefineWordRequest} request - Contains word and optional context for definition
+   * @param {string} request.word - The word to define
+   * @param {string} [request.context] - Optional context for understanding word usage
+   * @returns {Promise<DefineWordResponse>} Comprehensive word definition object
+   * @returns {string} .word - The word being defined
+   * @returns {string} .definition - Primary definition of the word
+   * @returns {Array<string>} .examples - Example sentences using the word
+   * @returns {Array<string>} .synonyms - Words with similar meanings
+   * @returns {Array<string>} .antonyms - Words with opposite meanings
+   * @returns {string} .partOfSpeech - Grammatical role (noun, verb, adjective, etc.)
+   * @returns {boolean} .cached - Whether the result came from cache
+   * @throws {AIServiceError} If word definition fails after all retries
+   *
+   * @example
+   * const definition = await llmService.defineWord('user123', {
+   *   word: 'serendipity',
+   *   context: 'Finding something good by chance'
+   * });
+   * // Returns: { word: 'serendipity', definition: '...', examples: [...], ... }
    */
   async defineWord(userId: string, request: DefineWordRequest): Promise<DefineWordResponse> {
     try {
@@ -126,22 +202,22 @@ class LLMService {
 
       // Generate prompt
       const prompt = `Define the word "${request.word}"${request.context ? ` in the context: "${request.context}"` : ''}.
-Provide:
-1. A clear definition
-2. 2-3 example sentences
-3. Synonyms (if applicable)
-4. Antonyms (if applicable)
-5. Part of speech
+          Provide:
+          1. A clear definition
+          2. 2-3 example sentences
+          3. Synonyms (if applicable)
+          4. Antonyms (if applicable)
+          5. Part of speech
 
-Format as JSON:
-{
-  "word": "${request.word}",
-  "definition": "...",
-  "examples": ["...", "..."],
-  "synonyms": ["...", "..."],
-  "antonyms": ["...", "..."],
-  "partOfSpeech": "noun/verb/etc"
-}`;
+          Format as JSON:
+          {
+            "word": "${request.word}",
+            "definition": "...",
+            "examples": ["...", "..."],
+            "synonyms": ["...", "..."],
+            "antonyms": ["...", "..."],
+            "partOfSpeech": "noun/verb/etc"
+          }`;
 
       const text = await this.withRetry(async () => {
         const model = getGeminiModel();
@@ -177,7 +253,30 @@ Format as JSON:
   }
 
   /**
-   * Generate text suggestions
+   * Generate alternative text suggestions based on type
+   * @description Creates alternative versions of text for various purposes including paraphrasing,
+   * expansion, summarization, and general improvement. Supports multiple suggestion types with
+   * configurable output count.
+   *
+   * @param {string} userId - Unique identifier of the user making the request
+   * @param {GenerateSuggestionsRequest} request - Configuration for suggestion generation
+   * @param {string} request.text - The text to generate suggestions for
+   * @param {string} request.type - Type of suggestions: 'paraphrase' | 'expand' | 'summarize' | 'improve'
+   * @param {number} [request.count] - Number of suggestions to generate (default: 3)
+   * @returns {Promise<GenerateSuggestionsResponse>} Object containing generated suggestions
+   * @returns {string} .originalText - The input text
+   * @returns {Array<string>} .suggestions - Array of generated alternative texts
+   * @returns {string} .type - The type of suggestions generated
+   * @returns {boolean} .cached - Whether the result came from cache
+   * @throws {AIServiceError} If suggestion generation fails after all retries
+   *
+   * @example
+   * const suggestions = await llmService.generateSuggestions('user123', {
+   *   text: 'The weather is nice today.',
+   *   type: 'paraphrase',
+   *   count: 2
+   * });
+   * // Returns suggestions like: "It's a beautiful day.", "Today has pleasant weather."
    */
   async generateSuggestions(
     userId: string,
@@ -249,7 +348,31 @@ Format as JSON:
   }
 
   /**
-   * Analyze writing style
+   * Analyze writing style and provide improvement suggestions
+   * @description Performs comprehensive analysis of text including word count, sentence count,
+   * readability score (Flesch Reading Ease), tone detection, and specific improvement suggestions.
+   * Combines basic statistical analysis with AI-powered tone and style assessment.
+   *
+   * @param {string} userId - Unique identifier of the user making the request
+   * @param {AnalyzeWritingStyleRequest} request - Contains text to analyze
+   * @param {string} request.text - The text to analyze
+   * @returns {Promise<AnalyzeWritingStyleResponse>} Comprehensive style analysis results
+   * @returns {string} .text - The input text
+   * @returns {Object} .analysis - Detailed analysis metrics
+   * @returns {string} .analysis.tone - Detected tone (formal, informal, professional, casual, etc.)
+   * @returns {number} .analysis.readabilityScore - Flesch Reading Ease score (0-100)
+   * @returns {number} .analysis.wordCount - Total number of words
+   * @returns {number} .analysis.sentenceCount - Total number of sentences
+   * @returns {number} .analysis.averageWordsPerSentence - Average sentence length
+   * @returns {number} .analysis.complexWords - Count of words with more than 7 characters
+   * @returns {Array<string>} .analysis.suggestions - Specific improvement recommendations
+   * @throws {AIServiceError} If analysis fails after all retries
+   *
+   * @example
+   * const analysis = await llmService.analyzeWritingStyle('user123', {
+   *   text: 'The quick brown fox jumps over the lazy dog.'
+   * });
+   * // Returns: { text: '...', analysis: { tone: 'neutral', readabilityScore: 90, ... } }
    */
   async analyzeWritingStyle(
     userId: string,
@@ -269,17 +392,17 @@ Format as JSON:
       // Use AI for tone analysis
       const prompt = `Analyze the tone and provide improvement suggestions for this text:
 
-"${request.text}"
+        "${request.text}"
 
-Provide:
-1. Overall tone (formal/informal/professional/casual/etc)
-2. 3-5 specific suggestions to improve the writing
+        Provide:
+        1. Overall tone (formal/informal/professional/casual/etc)
+        2. 3-5 specific suggestions to improve the writing
 
-Format as JSON:
-{
-  "tone": "...",
-  "suggestions": ["...", "...", "..."]
-}`;
+        Format as JSON:
+        {
+          "tone": "...",
+          "suggestions": ["...", "...", "..."]
+        }`;
 
       const text = await this.withRetry(async () => {
         const model = getGeminiModel();
@@ -329,7 +452,19 @@ Format as JSON:
   }
 
   /**
-   * Create correction prompt
+   * Create correction prompt for AI processing
+   * @description Constructs a structured prompt for the AI to correct text. Includes the text,
+   * optional context, and instructions for the correction process.
+   *
+   * @param {CorrectTextRequest} request - Contains text and optional context
+   * @returns {string} Formatted prompt ready for Gemini API
+   * @private
+   *
+   * @example
+   * const prompt = this.createCorrectionPrompt({
+   *   text: 'She dont like pizza.',
+   *   context: 'Casual English sentence'
+   * });
    */
   private createCorrectionPrompt(request: CorrectTextRequest): string {
     let prompt = `Correct the following text for grammar, spelling, and punctuation errors:\n\n"${request.text}"`;
@@ -344,7 +479,20 @@ Format as JSON:
   }
 
   /**
-   * Parse correction response
+   * Parse correction response from AI
+   * @description Extracts corrected text from the AI response and structures it into the response format.
+   * Currently provides basic parsing; can be enhanced to detect specific changes made.
+   *
+   * @param {string} aiResponse - Raw response text from Gemini AI
+   * @param {string} originalText - The original text before correction
+   * @returns {CorrectTextResponse} Structured response with correction details
+   * @private
+   *
+   * @example
+   * const result = this.parseCorrectionResponse(
+   *   "She doesn't like pizza.",
+   *   "She dont like pizza."
+   * );
    */
   private parseCorrectionResponse(aiResponse: string, originalText: string): CorrectTextResponse {
     // Simple parsing - extract corrected text
@@ -359,7 +507,20 @@ Format as JSON:
   }
 
   /**
-   * Log AI usage
+   * Log AI API usage for quota tracking and analytics
+   * @description Records details of AI API calls including user, operation type, token counts,
+   * model used, and cache status. Used for usage analytics, quota management, and billing.
+   * Failures in logging do not block the main operation.
+   *
+   * @param {string} userId - User who performed the operation
+   * @param {string} operation - Type of operation performed (e.g., 'correct_text', 'define_word')
+   * @param {number} outputLength - Length of the AI output in characters
+   * @param {boolean} cached - Whether the result was served from cache
+   * @returns {Promise<void>} Completes when logging is done or logged on failure
+   * @private
+   *
+   * @example
+   * await this.logUsage('user123', 'correct_text', 350, false);
    */
   private async logUsage(
     userId: string,

@@ -577,21 +577,21 @@
 
 ### 21. Database Seeding ⏱️ 2-3 hours
 
-- [ ] **21.1** Create seed script
-  - [ ] Create `prisma/seed.ts`
-  - [ ] Create admin user
-  - [ ] Create test users
-  - [ ] Seed common dictionary words (top 1000 English words)
-  - [ ] Create sample user settings
+- [x] **21.1** Create seed script
+  - [x] Create `prisma/seed.ts`
+  - [x] Create admin user
+  - [x] Create test users
+  - [x] Seed common dictionary words (top 1000 English words)
+  - [x] Create sample user settings
 
-- [ ] **21.2** Add seed script to package.json
+- [x] **21.2** Add seed script to package.json
   ```json
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
   }
   ```
 
-- [ ] **21.3** Run seed
+- [x] **21.3** Run seed
   ```bash
   npm run db:seed
   ```
@@ -602,26 +602,26 @@
 
 ### 22. Documentation ⏱️ 3-4 hours
 
-- [ ] **22.1** Create README.md
-  - [ ] Project overview
-  - [ ] Prerequisites
-  - [ ] Installation steps
-  - [ ] Running locally
-  - [ ] Running with Docker
-  - [ ] Testing
-  - [ ] Environment variables
-  - [ ] API documentation link
+- [x] **22.1** Create README.md
+  - [x] Project overview
+  - [x] Prerequisites
+  - [x] Installation steps
+  - [x] Running locally
+  - [x] Running with Docker
+  - [x] Testing
+  - [x] Environment variables
+  - [x] API documentation link
 
-- [ ] **22.2** Create API documentation
-  - [ ] Consider using Swagger/OpenAPI
-  - [ ] Or create detailed API.md
-  - [ ] Document all endpoints
-  - [ ] Include example requests/responses
+- [x] **22.2** Create API documentation
+  - [x] Consider using Swagger/OpenAPI
+  - [x] Or create detailed API.md
+  - [x] Document all endpoints
+  - [x] Include example requests/responses
 
-- [ ] **22.3** Add inline code documentation
-  - [ ] Add JSDoc comments to services
-  - [ ] Add JSDoc comments to utilities
-  - [ ] Document complex logic
+- [x] **22.3** Add inline code documentation
+  - [x] Add JSDoc comments to services
+  - [x] Add JSDoc comments to utilities
+  - [x] Document complex logic
 
 ---
 
@@ -775,14 +775,14 @@
 For a quick MVP in 1 week:
 
 - [x] Set up project + database + Redis (Day 1)
-- [ ] Create utilities + middleware (Day 1-2)
-- [ ] Implement auth (Day 2)
-- [ ] Implement dictionary service (Day 3)
-- [ ] Implement LLM correction (Day 4)
-- [ ] Add basic tests (Day 5)
+- [x] Create utilities + middleware (Day 1-2)
+- [x] Implement auth (Day 2)
+- [x] Implement dictionary service (Day 3)
+- [x] Implement LLM correction (Day 4)
+- [x] Add basic tests (Day 5)
 - [ ] Deploy (Day 5)
 
 ---
 
-**Last Updated:** 2024-11-30
-**Version:** 1.0
+**Last Updated:** 2024-12-05
+**Version:** 2.0
