@@ -46,7 +46,9 @@ const editorSlice = createSlice({
     },
     
     setSelection: (state, action: PayloadAction<TextSelection | null>) => {
-      state.selection = action.payload;
+      // Use type assertion since TextSelection contains non-serializable DOM objects
+      // This is handled by serializableCheck ignore in store configuration
+      state.selection = action.payload as typeof state.selection;
     },
     
     clearSelection: (state) => {

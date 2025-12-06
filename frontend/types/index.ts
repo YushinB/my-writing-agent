@@ -43,11 +43,14 @@ export interface WordDefinition {
   partOfSpeech: string;
   exampleSentence: string;
   synonyms: string[];
+  pronunciation?: string;
+  audioUrl?: string;
 }
 
 export interface SavedWord extends WordDefinition {
   id: string;
   dateAdded: number;
+  notes?: string;
 }
 
 export enum ViewMode {

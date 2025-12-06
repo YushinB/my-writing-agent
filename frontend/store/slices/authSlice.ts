@@ -1,25 +1,42 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User, UserRole } from '../../types';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { User } from '../../types';
+import authService, { AuthUser, LoginRequest, RegisterRequest } from '../../services/auth';
+import { tokenStorage } from '../../services/api';
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
   currentView: 'login' | 'writing' | 'admin';
 }
 
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
+  isLoading: false,
+  error: null,
   currentView: 'login',
 };
+
+// Convert AuthUser to User
+const toUser = (authUser: AuthUser): User => ({
+  id: authUser.id,
+  email: authUser.email,
+  name: authUser.name,
+  role: authUser.role,
+});
 
 // Load from localStorage on initialization
 const loadInitialState = (): AuthState => {
   try {
     const stored = localStorage.getItem('pp_user');
-    if (stored) {
+    const hasTokens = tokenStorage.hasTokens();
+    
+    if (stored && hasTokens) {
       const user = JSON.parse(stored);
       return {
+        ...initialState,
         user,
         isAuthenticated: true,
         currentView: user.role === 'admin' ? 'admin' : 'writing',
@@ -31,10 +48,64 @@ const loadInitialState = (): AuthState => {
   return initialState;
 };
 
+// Async thunks
+export const registerUser = createAsyncThunk(
+  'auth/register',
+  async (data: RegisterRequest, { rejectWithValue }) => {
+    try {
+      const response = await authService.register(data);
+      return toUser(response.user);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Registration failed';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const loginUser = createAsyncThunk(
+  'auth/login',
+  async (data: LoginRequest, { rejectWithValue }) => {
+    try {
+      const response = await authService.login(data);
+      return toUser(response.user);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Login failed';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const logoutUser = createAsyncThunk(
+  'auth/logout',
+  async (_, { rejectWithValue }) => {
+    try {
+      await authService.logout();
+      return undefined;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Logout failed';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const fetchCurrentUser = createAsyncThunk(
+  'auth/fetchCurrentUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const user = await authService.getCurrentUser();
+      return toUser(user);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to fetch user';
+      return rejectWithValue(message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: loadInitialState(),
   reducers: {
+    // Legacy action for backwards compatibility
     loginSuccess: (state, action: PayloadAction<{ email: string }>) => {
       const newUser: User = {
         id: crypto.randomUUID(),
@@ -47,7 +118,6 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.currentView = newUser.role === 'admin' ? 'admin' : 'writing';
       
-      // Persist to localStorage
       localStorage.setItem('pp_user', JSON.stringify(newUser));
     },
     
@@ -55,14 +125,86 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.currentView = 'login';
+      state.error = null;
       localStorage.removeItem('pp_user');
+      tokenStorage.clearTokens();
     },
     
     setCurrentView: (state, action: PayloadAction<'login' | 'writing' | 'admin'>) => {
       state.currentView = action.payload;
     },
+    
+    clearError: (state) => {
+      state.error = null;
+    },
+  },
+  extraReducers: (builder) => {
+    // Register
+    builder
+      .addCase(registerUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.currentView = action.payload.role === 'admin' ? 'admin' : 'writing';
+        localStorage.setItem('pp_user', JSON.stringify(action.payload));
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
+    
+    // Login
+    builder
+      .addCase(loginUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.currentView = action.payload.role === 'admin' ? 'admin' : 'writing';
+        localStorage.setItem('pp_user', JSON.stringify(action.payload));
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
+    
+    // Logout
+    builder
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.currentView = 'login';
+        localStorage.removeItem('pp_user');
+      });
+    
+    // Fetch current user
+    builder
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        localStorage.setItem('pp_user', JSON.stringify(action.payload));
+      })
+      .addCase(fetchCurrentUser.rejected, (state) => {
+        state.isLoading = false;
+        state.user = null;
+        state.isAuthenticated = false;
+        state.currentView = 'login';
+        localStorage.removeItem('pp_user');
+        tokenStorage.clearTokens();
+      });
   },
 });
 
-export const { loginSuccess, logout, setCurrentView } = authSlice.actions;
+export const { loginSuccess, logout, setCurrentView, clearError } = authSlice.actions;
 export default authSlice.reducer;

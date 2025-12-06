@@ -52,15 +52,18 @@ const WritingStudio: React.FC = () => {
   const [selectedStyle, setSelectedStyle] = useState<WritingStyle>('formal');
   const [liveMode, setLiveMode] = useState(false);
   const [liveSuggestion, setLiveSuggestion] = useState<LiveSuggestion | null>(null);
-  const [isGettingSuggestion, setIsGettingSuggestion] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_isGettingSuggestion, setIsGettingSuggestion] = useState(false);
   const [analysisType, setAnalysisType] = useState<'grammar' | 'phrasing'>('grammar');
 
   // Word selection popover state
   const [selectedWord, setSelectedWord] = useState<string>('');
   const [wordDefinition, setWordDefinition] = useState<WordDefinition | null>(null);
-  const [isLookingUpWord, setIsLookingUpWord] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isLookingUpWord, _setIsLookingUpWord] = useState(false);
   const [popoverVisible, setPopoverVisible] = useState(false);
-  const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [popoverPosition, _setPopoverPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);

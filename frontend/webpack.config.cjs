@@ -183,7 +183,7 @@ module.exports = (_, argv) => {
       static: {
         directory: path.join(__dirname, 'public'),
       },
-      port: 3000,
+      port: 5173,
       hot: true,
       open: true,
       historyApiFallback: true,
@@ -194,6 +194,13 @@ module.exports = (_, argv) => {
           warnings: false,
         },
       },
+      proxy: [
+        {
+          context: ['/api'],
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+        },
+      ],
     },
 
     devtool: isDevelopment ? 'eval-source-map' : 'source-map',

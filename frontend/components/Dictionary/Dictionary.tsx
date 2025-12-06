@@ -304,12 +304,6 @@ const Pronunciation = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing.lg};
 `;
 
-const PhoneticText = styled.span`
-  font-size: ${({ theme }) => theme.fontSizes.base};
-  color: ${({ theme }) => theme.colors.textSecondary};
-  font-style: italic;
-`;
-
 const PartOfSpeech = styled.span`
   font-size: ${({ theme }) => theme.fontSizes.xs};
   font-weight: 600;
