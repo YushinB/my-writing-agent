@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { checkDatabaseHealth } from '../config/database';
 import { checkRedisHealth } from '../config/redis';
 import { testGeminiConnection } from '../config/gemini';
+import { isDevelopment } from '../config/env';
 import { createSuccessResponse } from '../utils/transform';
 import { asyncHandler } from '../middleware/errorHandler';
 import { redis } from '../config/redis';
@@ -14,11 +15,17 @@ import { prisma } from '../config/database';
 export const healthCheck = asyncHandler(async (_req: Request, res: Response) => {
   const startTime = Date.now();
   void _req;
+  
+  // Only test Gemini connection in development (to save API calls in production)
+  const geminiHealthPromise = isDevelopment() 
+    ? testGeminiConnection().catch(() => false)
+    : Promise.resolve(true); // Skip in production, assume healthy
+  
   // Check services
   const [dbHealthy, redisHealthy, geminiHealthy] = await Promise.all([
     checkDatabaseHealth(),
     checkRedisHealth(),
-    testGeminiConnection().catch(() => false),
+    geminiHealthPromise,
   ]);
 
   const responseTime = Date.now() - startTime;
@@ -31,7 +38,7 @@ export const healthCheck = asyncHandler(async (_req: Request, res: Response) => 
     services: {
       database: dbHealthy,
       redis: redisHealthy,
-      geminiAi: geminiHealthy,
+      geminiAi: isDevelopment() ? geminiHealthy : 'skipped',
     },
     version: process.env.npm_package_version || '1.0.0',
     responseTime: `${responseTime}ms`,

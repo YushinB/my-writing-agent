@@ -4,8 +4,8 @@ import { X, Search, Volume2, Star, Calendar, Loader, BookmarkPlus } from 'lucide
 import { useAppDispatch, useAppSelector } from '../../store';
 import {
   closeDictionary,
-  removeWord,
-  addWord,
+  removeWordFromBackend,
+  saveWordToBackend,
   setCurrentDefinition,
   clearCurrentDefinition,
   setIsDefining,
@@ -409,7 +409,7 @@ const Dictionary: React.FC<DictionaryProps> = () => {
 
   const handleRemoveWord = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    dispatch(removeWord(id));
+    dispatch(removeWordFromBackend(id));
     if (currentDefinition && words.find((w) => w.id === id)?.word === currentDefinition.word) {
       dispatch(clearCurrentDefinition());
     }
@@ -456,7 +456,7 @@ const Dictionary: React.FC<DictionaryProps> = () => {
 
   const handleSaveWord = () => {
     if (currentDefinition && !words.find((w) => w.word === currentDefinition.word)) {
-      dispatch(addWord(currentDefinition));
+      dispatch(saveWordToBackend({ word: currentDefinition.word }));
     }
   };
 

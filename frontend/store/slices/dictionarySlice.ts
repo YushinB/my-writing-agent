@@ -18,18 +18,8 @@ interface DictionaryState {
   } | null;
 }
 
-const loadSavedWords = (): SavedWord[] => {
-  try {
-    const saved = localStorage.getItem('prosepolish_dictionary');
-    return saved ? JSON.parse(saved) : [];
-  } catch (error) {
-    console.error('Failed to load dictionary:', error);
-    return [];
-  }
-};
-
 const initialState: DictionaryState = {
-  words: loadSavedWords(),
+  words: [],
   isOpen: false,
   currentDefinition: null,
   isDefining: false,
@@ -122,22 +112,6 @@ const dictionarySlice = createSlice({
   name: 'dictionary',
   initialState,
   reducers: {
-    // Local-only actions (for backwards compatibility)
-    addWord: (state, action: PayloadAction<WordDefinition>) => {
-      const newWord: SavedWord = {
-        ...action.payload,
-        id: crypto.randomUUID(),
-        dateAdded: Date.now(),
-      };
-      state.words.push(newWord);
-      localStorage.setItem('prosepolish_dictionary', JSON.stringify(state.words));
-    },
-    
-    removeWord: (state, action: PayloadAction<string>) => {
-      state.words = state.words.filter(word => word.id !== action.payload);
-      localStorage.setItem('prosepolish_dictionary', JSON.stringify(state.words));
-    },
-    
     openDictionary: (state) => {
       state.isOpen = true;
     },
@@ -173,7 +147,6 @@ const dictionarySlice = createSlice({
         state.isLoading = false;
         state.words = action.payload.words;
         state.pagination = action.payload.pagination;
-        localStorage.setItem('prosepolish_dictionary', JSON.stringify(action.payload.words));
       })
       .addCase(fetchSavedWords.rejected, (state, action) => {
         state.isLoading = false;
@@ -189,7 +162,6 @@ const dictionarySlice = createSlice({
       .addCase(saveWordToBackend.fulfilled, (state, action) => {
         state.isLoading = false;
         state.words.push(action.payload);
-        localStorage.setItem('prosepolish_dictionary', JSON.stringify(state.words));
       })
       .addCase(saveWordToBackend.rejected, (state, action) => {
         state.isLoading = false;
@@ -205,7 +177,6 @@ const dictionarySlice = createSlice({
       .addCase(removeWordFromBackend.fulfilled, (state, action) => {
         state.isLoading = false;
         state.words = state.words.filter(word => word.id !== action.payload);
-        localStorage.setItem('prosepolish_dictionary', JSON.stringify(state.words));
       })
       .addCase(removeWordFromBackend.rejected, (state, action) => {
         state.isLoading = false;
@@ -246,8 +217,6 @@ const dictionarySlice = createSlice({
 });
 
 export const {
-  addWord,
-  removeWord,
   openDictionary,
   closeDictionary,
   setCurrentDefinition,

@@ -1,36 +1,36 @@
 import { WordDefinition } from '../types';
-import geminiService from './gemini';
+import dictionaryApiService from './dictionaryApi';
+import llmService from './llm';
 
 class DictionaryService {
   /**
-   * Look up a word definition using the Gemini API
+   * Look up a word definition using the backend API
    */
   async lookupWord(word: string): Promise<WordDefinition | null> {
     try {
-      const prompt = `Define the word "${word}" in a clear and concise way. Provide the following information in JSON format:
-{
-  "word": "${word}",
-  "definition": "A clear, simple definition",
-  "partOfSpeech": "noun/verb/adjective/etc",
-  "exampleSentence": "A natural example sentence using the word",
-  "synonyms": ["synonym1", "synonym2", "synonym3"]
-}
-
-Return ONLY the JSON object, nothing else.`;
-
-      const response = await geminiService.generateText(prompt, 'gemini-2.5-flash');
-
-      // Extract JSON from response
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('Invalid response format');
-      }
-
-      const definition: WordDefinition = JSON.parse(jsonMatch[0]);
+      // Try backend dictionary API first
+      const response = await dictionaryApiService.getWord(word);
+      
+      const definition: WordDefinition = {
+        word: response.word,
+        definition: response.definitions?.[0]?.definition || '',
+        partOfSpeech: response.partOfSpeech || '',
+        exampleSentence: response.definitions?.[0]?.example || '',
+        synonyms: response.synonyms || [],
+        pronunciation: response.pronunciation,
+      };
+      
       return definition;
     } catch (error) {
       console.error('Dictionary lookup error:', error);
-      return null;
+      
+      // Fallback to LLM define endpoint
+      try {
+        const llmResponse = await llmService.defineWord({ word });
+        return llmService.toWordDefinition(llmResponse);
+      } catch {
+        return null;
+      }
     }
   }
 
@@ -41,18 +41,10 @@ Return ONLY the JSON object, nothing else.`;
     if (partial.length < 2) return [];
 
     try {
-      const prompt = `Suggest 5 English words that start with "${partial}". Return only a JSON array of words, nothing else. Example: ["word1", "word2", "word3", "word4", "word5"]`;
-
-      const response = await geminiService.generateText(prompt, 'gemini-2.5-flash');
-
-      // Extract JSON array from response
-      const jsonMatch = response.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
-        return [];
-      }
-
-      const suggestions: string[] = JSON.parse(jsonMatch[0]);
-      return suggestions.slice(0, 5);
+      // Search for words starting with the partial string
+      const response = await dictionaryApiService.search(partial, 5);
+      // Return the word if found, otherwise empty array
+      return response?.word ? [response.word] : [];
     } catch (error) {
       console.error('Word suggestions error:', error);
       return [];

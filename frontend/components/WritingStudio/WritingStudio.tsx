@@ -5,7 +5,7 @@ import { setInputText } from '../../store/slices/editorSlice';
 import { analyzeText} from '../../store/slices/analysisSlice';
 import { toggleTheme } from '../../store/slices/settingsSlice';
 import { logout, setCurrentView } from '../../store/slices/authSlice';
-import { openDictionary, addWord } from '../../store/slices/dictionarySlice';
+import { openDictionary, saveWordToBackend } from '../../store/slices/dictionarySlice';
 import geminiService from '../../services/gemini';
 import { WritingStyle, WordDefinition, LiveSuggestion } from '../../types';
 import Dictionary from '../Dictionary/Dictionary';
@@ -150,21 +150,14 @@ const WritingStudio: React.FC = () => {
 
 
   // Handle adding vocabulary item to dictionary
-  const handleAddVocabToDictionary = useCallback(async (term: string, definition: string, example: string) => {
-    const vocabDefinition: WordDefinition = {
-      word: term,
-      definition: definition,
-      partOfSpeech: 'vocabulary',
-      exampleSentence: example,
-      synonyms: []
-    };
-    dispatch(addWord(vocabDefinition));
+  const handleAddVocabToDictionary = useCallback(async (term: string, _definition: string, _example: string) => {
+    dispatch(saveWordToBackend({ word: term }));
   }, [dispatch]);
 
   // Handle adding word to dictionary
   const handleAddToDictionary = () => {
     if (wordDefinition) {
-      dispatch(addWord(wordDefinition));
+      dispatch(saveWordToBackend({ word: wordDefinition.word }));
       setPopoverVisible(false);
     }
   };

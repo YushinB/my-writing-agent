@@ -1,42 +1,57 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Mail, Lock, PenLine, ArrowRight, User as UserIcon, ShieldCheck } from 'lucide-react';
-import { useAppDispatch } from '../../store';
-import { loginSuccess } from '../../store/slices/authSlice';
+import { Mail, Lock, PenLine, ArrowRight, User as UserIcon, ShieldCheck, UserPlus } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { loginUser, registerUser, clearError } from '../../store/slices/authSlice';
 
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
+  const { isLoading, error: authError } = useAppSelector((state) => state.auth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [localError, setLocalError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    setLocalError('');
+    dispatch(clearError());
 
-    setTimeout(() => {
-      if (email && password) {
-        dispatch(loginSuccess({ email }));
-      } else {
-        setError('Please enter a valid email and password');
-        setIsLoading(false);
+    if (!email || !password) {
+      setLocalError('Please enter email and password');
+      return;
+    }
+
+    if (isRegisterMode) {
+      if (!name) {
+        setLocalError('Please enter your name');
+        return;
       }
-    }, 1000);
+      dispatch(registerUser({ email, password, name }));
+    } else {
+      dispatch(loginUser({ email, password }));
+    }
   };
 
-  const handleAutoLogin = (role: 'user' | 'admin') => {
-    const dummyEmail = role === 'admin' ? 'admin@prosepolish.com' : 'writer@prosepolish.com';
-    setEmail(dummyEmail);
-    setPassword('password123');
-    setError('');
-    setIsLoading(true);
-
-    setTimeout(() => {
-      dispatch(loginSuccess({ email: dummyEmail }));
-    }, 800);
+  const handleQuickLogin = (role: 'user' | 'admin') => {
+    const credentials = role === 'admin' 
+      ? { email: 'admin@prosepolish.com', password: 'AdminPass123!' }
+      : { email: 'testuser@example.com', password: 'TestPass123!' };
+    
+    setEmail(credentials.email);
+    setPassword(credentials.password);
+    dispatch(clearError());
+    dispatch(loginUser(credentials));
   };
+
+  const toggleMode = () => {
+    setIsRegisterMode(!isRegisterMode);
+    setLocalError('');
+    dispatch(clearError());
+  };
+
+  const displayError = localError || authError;
 
   return (
     <Container>
@@ -46,44 +61,66 @@ const Login: React.FC = () => {
             <PenLine size={32} />
           </IconWrapper>
           <Title>ProsePolish</Title>
-          <Subtitle>Sign in to continue your writing journey</Subtitle>
+          <Subtitle>{isRegisterMode ? 'Create your account' : 'Sign in to continue your writing journey'}</Subtitle>
         </Header>
 
         <FormCard>
-          <QuickLoginSection>
-            <QuickLoginLabel>Test Accounts</QuickLoginLabel>
-            <QuickLoginGrid>
-              <QuickLoginButton
-                type="button"
-                onClick={() => handleAutoLogin('user')}
-                disabled={isLoading}
-              >
-                <QuickLoginIcon $color="#3b82f6">
-                  <UserIcon size={20} />
-                </QuickLoginIcon>
-                <QuickLoginText>Writer Demo</QuickLoginText>
-              </QuickLoginButton>
+          {!isRegisterMode && (
+            <>
+              <QuickLoginSection>
+                <QuickLoginLabel>Quick Login</QuickLoginLabel>
+                <QuickLoginGrid>
+                  <QuickLoginButton
+                    type="button"
+                    onClick={() => handleQuickLogin('user')}
+                    disabled={isLoading}
+                  >
+                    <QuickLoginIcon $color="#3b82f6">
+                      <UserIcon size={20} />
+                    </QuickLoginIcon>
+                    <QuickLoginText>Test User</QuickLoginText>
+                  </QuickLoginButton>
 
-              <QuickLoginButton
-                type="button"
-                onClick={() => handleAutoLogin('admin')}
-                disabled={isLoading}
-              >
-                <QuickLoginIcon $color="#a855f7">
-                  <ShieldCheck size={20} />
-                </QuickLoginIcon>
-                <QuickLoginText>Admin Demo</QuickLoginText>
-              </QuickLoginButton>
-            </QuickLoginGrid>
-          </QuickLoginSection>
+                  <QuickLoginButton
+                    type="button"
+                    onClick={() => handleQuickLogin('admin')}
+                    disabled={isLoading}
+                  >
+                    <QuickLoginIcon $color="#a855f7">
+                      <ShieldCheck size={20} />
+                    </QuickLoginIcon>
+                    <QuickLoginText>Admin</QuickLoginText>
+                  </QuickLoginButton>
+                </QuickLoginGrid>
+              </QuickLoginSection>
 
-          <Divider>
-            <DividerLine />
-            <DividerText>Or sign in with email</DividerText>
-            <DividerLine />
-          </Divider>
+              <Divider>
+                <DividerLine />
+                <DividerText>Or sign in with email</DividerText>
+                <DividerLine />
+              </Divider>
+            </>
+          )}
 
           <Form onSubmit={handleSubmit}>
+            {isRegisterMode && (
+              <FormGroup>
+                <Label>Full Name</Label>
+                <InputWrapper>
+                  <InputIcon>
+                    <UserIcon size={18} />
+                  </InputIcon>
+                  <Input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="John Doe"
+                    required={isRegisterMode}
+                  />
+                </InputWrapper>
+              </FormGroup>
+            )}
+
             <FormGroup>
               <Label>Email Address</Label>
               <InputWrapper>
@@ -112,22 +149,33 @@ const Login: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
+                  minLength={8}
                 />
               </InputWrapper>
             </FormGroup>
 
-            {error && <ErrorMessage>{error}</ErrorMessage>}
+            {displayError && <ErrorMessage>{displayError}</ErrorMessage>}
 
             <SubmitButton type="submit" disabled={isLoading}>
               {isLoading ? (
                 <Spinner />
               ) : (
                 <>
-                  Sign In <ArrowRight size={18} />
+                  {isRegisterMode ? 'Create Account' : 'Sign In'} <ArrowRight size={18} />
                 </>
               )}
             </SubmitButton>
           </Form>
+
+          <ToggleModeSection>
+            <ToggleModeText>
+              {isRegisterMode ? 'Already have an account?' : "Don't have an account?"}
+            </ToggleModeText>
+            <ToggleModeButton type="button" onClick={toggleMode}>
+              {isRegisterMode ? 'Sign In' : 'Register'}
+              {!isRegisterMode && <UserPlus size={16} />}
+            </ToggleModeButton>
+          </ToggleModeSection>
         </FormCard>
       </LoginBox>
     </Container>
@@ -362,6 +410,40 @@ const Spinner = styled.div`
   border-top-color: white;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+`;
+
+const ToggleModeSection = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${({ theme }) => theme.spacing.xs};
+  margin-top: ${({ theme }) => theme.spacing.lg};
+  padding-top: ${({ theme }) => theme.spacing.lg};
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+const ToggleModeText = styled.span`
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-size: ${({ theme }) => theme.fontSizes.sm};
+`;
+
+const ToggleModeButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.xs};
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: ${({ theme }) => theme.fontSizes.sm};
+  font-weight: 600;
+  cursor: pointer;
+  padding: ${({ theme }) => theme.spacing.xs};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  transition: all ${({ theme }) => theme.transitions.base};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primaryLight}20;
+  }
 `;
 
 export default Login;

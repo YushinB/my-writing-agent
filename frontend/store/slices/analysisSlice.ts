@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import llmService from '../../services/llm';
 import geminiService from '../../services/gemini';
 import { CorrectionResponse, LiveSuggestion, AIModel, WritingStyle } from '../../types';
 
@@ -16,7 +17,7 @@ const initialState: AnalysisState = {
   error: null,
 };
 
-// Async thunk for text analysis
+// Async thunk for text analysis - uses backend API
 export const analyzeText = createAsyncThunk(
   'analysis/analyzeText',
   async ({
@@ -28,12 +29,34 @@ export const analyzeText = createAsyncThunk(
     model: AIModel;
     style: WritingStyle;
   }) => {
-    const response = await geminiService.analyzeText(text, model, style);
-    return response;
+    // Try backend first, fallback to direct Gemini if not authenticated
+    try {
+      const response = await llmService.correctText({ text });
+      // Transform backend response to match CorrectionResponse format
+      const correctionResponse: CorrectionResponse = {
+        correctedText: response.corrected,
+        segments: [],
+        explanation: response.corrections.map(c => c.explanation).join('. '),
+        betterPhrasing: response.corrected,
+        betterPhrasingExplanation: '',
+        enhancedVocabulary: [],
+        keyImprovements: response.corrections.map(c => `${c.type}: ${c.original} → ${c.corrected}`),
+        ieltsAssessment: {
+          overallBand: 0,
+          criteria: [],
+          generalFeedback: ''
+        }
+      };
+      return correctionResponse;
+    } catch {
+      // Fallback to direct Gemini API if backend fails
+      const response = await geminiService.analyzeText(text, model, style);
+      return response;
+    }
   }
 );
 
-// Async thunk for live suggestions
+// Async thunk for live suggestions - still uses direct Gemini for real-time performance
 export const getLiveSuggestion = createAsyncThunk(
   'analysis/getLiveSuggestion',
   async ({ text, model }: { text: string; model: AIModel }) => {

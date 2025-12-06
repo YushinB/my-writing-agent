@@ -105,22 +105,6 @@ const authSlice = createSlice({
   name: 'auth',
   initialState: loadInitialState(),
   reducers: {
-    // Legacy action for backwards compatibility
-    loginSuccess: (state, action: PayloadAction<{ email: string }>) => {
-      const newUser: User = {
-        id: crypto.randomUUID(),
-        email: action.payload.email,
-        name: action.payload.email.split('@')[0],
-        role: action.payload.email.includes('admin') ? 'admin' : 'user',
-      };
-      
-      state.user = newUser;
-      state.isAuthenticated = true;
-      state.currentView = newUser.role === 'admin' ? 'admin' : 'writing';
-      
-      localStorage.setItem('pp_user', JSON.stringify(newUser));
-    },
-    
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
@@ -206,5 +190,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { loginSuccess, logout, setCurrentView, clearError } = authSlice.actions;
+export const { logout, setCurrentView, clearError } = authSlice.actions;
 export default authSlice.reducer;
