@@ -3,8 +3,15 @@ import morgan from 'morgan';
 import corsMiddleware from './middleware/cors';
 import { generalRateLimiter } from './middleware/rateLimiter';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import {
+  helmetMiddleware,
+  httpsRedirect,
+  securityHeaders,
+  validateRequestSize,
+} from './middleware/security';
+import { compressionMiddleware, cacheHeaders } from './middleware/compression';
 import routes from './routes';
-import { isDevelopment } from './config/env';
+import { isDevelopment, isProduction } from './config/env';
 import logger from './utils/logger';
 
 /**
@@ -16,9 +23,29 @@ function createApp(): Application {
   // Trust proxy (for rate limiting behind reverse proxy)
   app.set('trust proxy', 1);
 
+  // Security: Helmet.js - Set security HTTP headers
+  app.use(helmetMiddleware);
+
+  // Security: HTTPS redirect (production only)
+  if (isProduction()) {
+    app.use(httpsRedirect);
+  }
+
+  // Security: Custom security headers
+  app.use(securityHeaders);
+
+  // Security: Request size validation (before body parser)
+  app.use(validateRequestSize);
+
   // Body parser middleware
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+  // Performance: Compression
+  app.use(compressionMiddleware);
+
+  // Performance: Cache headers
+  app.use(cacheHeaders);
 
   // CORS middleware
   app.use(corsMiddleware);

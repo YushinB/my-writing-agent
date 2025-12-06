@@ -12,6 +12,10 @@ class DatabaseClient {
       DatabaseClient.instance = new PrismaClient({
         log:
           process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
+        // Connection pool configuration
+        // Note: Prisma handles connection pooling automatically based on DATABASE_URL params
+        // For production, add connection pool params to DATABASE_URL:
+        // ?connection_limit=10&pool_timeout=20
       });
 
       // Handle connection events

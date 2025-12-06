@@ -7,5 +7,6 @@ const router = Router();
 router.get('/', healthController.healthCheck);
 router.get('/ready', healthController.readinessCheck);
 router.get('/live', healthController.livenessCheck);
+router.get('/metrics', healthController.metricsCheck);
 
 export default router;

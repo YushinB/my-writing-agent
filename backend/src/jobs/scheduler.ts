@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import cron, { ScheduledTask } from 'node-cron';
 import { cacheCleanupJob, getCacheStats } from './cacheCleanup';
 import logger from '../utils/logger';
 
@@ -7,7 +7,7 @@ import logger from '../utils/logger';
  * Manages scheduled background jobs using node-cron
  */
 class JobScheduler {
-  private jobs: Map<string, cron.ScheduledTask> = new Map();
+  private jobs: Map<string, ScheduledTask> = new Map();
   private isRunning = false;
 
   /**
@@ -33,7 +33,6 @@ class JobScheduler {
         }
       },
       {
-        scheduled: true,
         timezone: 'UTC',
       }
     );
@@ -54,7 +53,6 @@ class JobScheduler {
         }
       },
       {
-        scheduled: true,
         timezone: 'UTC',
       }
     );

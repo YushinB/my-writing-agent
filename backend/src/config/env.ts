@@ -23,17 +23,89 @@ const envSchema = z.object({
   REDIS_DB: z.string().default('0').transform(Number),
 
   // JWT Configuration
-  JWT_ACCESS_SECRET: z.string().min(32, 'JWT access secret must be at least 32 characters'),
-  JWT_REFRESH_SECRET: z.string().min(32, 'JWT refresh secret must be at least 32 characters'),
+  JWT_ACCESS_SECRET: z
+    .string()
+    .min(32, 'JWT access secret must be at least 32 characters')
+    .refine(
+      (val) => {
+        // In production, enforce stronger secrets (no common patterns)
+        if (process.env.NODE_ENV === 'production') {
+          const weakPatterns = [
+            'secret',
+            'password',
+            'change-this',
+            'your-super-secret',
+            '123456',
+            'test',
+          ];
+          const lowerVal = val.toLowerCase();
+          return !weakPatterns.some((pattern) => lowerVal.includes(pattern));
+        }
+        return true;
+      },
+      {
+        message:
+          'JWT access secret is too weak for production. Generate a strong random secret.',
+      }
+    ),
+  JWT_REFRESH_SECRET: z
+    .string()
+    .min(32, 'JWT refresh secret must be at least 32 characters')
+    .refine(
+      (val) => {
+        // In production, enforce stronger secrets (no common patterns)
+        if (process.env.NODE_ENV === 'production') {
+          const weakPatterns = [
+            'secret',
+            'password',
+            'change-this',
+            'your-super-secret',
+            '123456',
+            'test',
+          ];
+          const lowerVal = val.toLowerCase();
+          return !weakPatterns.some((pattern) => lowerVal.includes(pattern));
+        }
+        return true;
+      },
+      {
+        message:
+          'JWT refresh secret is too weak for production. Generate a strong random secret.',
+      }
+    )
+    .refine(
+      (val) => {
+        // Ensure refresh secret is different from access secret
+        return val !== process.env.JWT_ACCESS_SECRET;
+      },
+      {
+        message: 'JWT refresh secret must be different from access secret',
+      }
+    ),
   JWT_ACCESS_EXPIRY: z.string().default('15m'),
   JWT_REFRESH_EXPIRY: z.string().default('7d'),
 
   // Google Gemini AI
   GEMINI_API_KEY: z.string().min(1, 'Gemini API key is required'),
-  GEMINI_MODEL: z.string().default('gemini-2.0-flash-exp'),
+  GEMINI_MODEL: z.string().default('gemini-2.0-flash'),
 
   // CORS Configuration
-  CORS_ORIGIN: z.string().default('http://localhost:3000'),
+  CORS_ORIGIN: z
+    .string()
+    .default('http://localhost:3000')
+    .refine(
+      (val) => {
+        // In production, enforce HTTPS origins
+        if (process.env.NODE_ENV === 'production') {
+          const origins = val.split(',').map((o) => o.trim());
+          return origins.every((origin) => origin.startsWith('https://'));
+        }
+        return true;
+      },
+      {
+        message: 'CORS origins must use HTTPS in production',
+      }
+    ),
 
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: z.string().default('900000').transform(Number),

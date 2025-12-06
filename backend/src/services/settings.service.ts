@@ -73,7 +73,7 @@ class SettingsService {
         settings = await prisma.userSettings.create({
           data: {
             userId,
-            llmModel: data.llmModel || 'gemini-2.0-flash-exp',
+            llmModel: data.llmModel || 'gemini-2.0-flash',
             preferredLanguage: data.preferredLanguage || 'en',
             theme: data.theme || 'light',
             emailNotifications: data.emailNotifications ?? true,
@@ -118,7 +118,7 @@ class SettingsService {
       const settings = await prisma.userSettings.create({
         data: {
           userId,
-          llmModel: 'gemini-2.0-flash-exp',
+          llmModel: 'gemini-2.0-flash',
           preferredLanguage: 'en',
           theme: 'light',
           emailNotifications: true,
@@ -177,7 +177,7 @@ class SettingsService {
       const settings = await prisma.userSettings.update({
         where: { userId },
         data: {
-          llmModel: 'gemini-2.0-flash-exp',
+          llmModel: 'gemini-2.0-flash',
           preferredLanguage: 'en',
           theme: 'light',
           emailNotifications: true,

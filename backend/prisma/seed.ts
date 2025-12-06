@@ -366,7 +366,7 @@ async function main() {
     await prisma.userSettings.create({
       data: {
         userId: adminUser.id,
-        llmModel: 'gemini-2.0-flash-exp',
+        llmModel: 'gemini-2.0-flash',
         preferredLanguage: 'en',
         theme: 'dark',
         emailNotifications: true,
@@ -391,7 +391,7 @@ async function main() {
     await prisma.userSettings.create({
       data: {
         userId: user1.id,
-        llmModel: 'gemini-2.0-flash-exp',
+        llmModel: 'gemini-2.0-flash',
         preferredLanguage: 'en',
         theme: 'light',
         emailNotifications: true,
@@ -411,7 +411,7 @@ async function main() {
     await prisma.userSettings.create({
       data: {
         userId: user2.id,
-        llmModel: 'gemini-2.0-flash-exp',
+        llmModel: 'gemini-2.0-flash',
         preferredLanguage: 'en',
         theme: 'light',
         emailNotifications: false,
@@ -431,7 +431,7 @@ async function main() {
     await prisma.userSettings.create({
       data: {
         userId: demoUser.id,
-        llmModel: 'gemini-2.0-flash-exp',
+        llmModel: 'gemini-2.0-flash',
         preferredLanguage: 'en',
         theme: 'dark',
         emailNotifications: true,

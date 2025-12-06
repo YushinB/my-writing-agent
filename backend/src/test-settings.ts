@@ -33,7 +33,7 @@ async function testSettingsService() {
     console.log(`   Email Notifications: ${autoSettings.emailNotifications}`);
 
     if (
-      autoSettings.llmModel === 'gemini-2.0-flash-exp' &&
+      autoSettings.llmModel === 'gemini-2.0-flash' &&
       autoSettings.preferredLanguage === 'en' &&
       autoSettings.theme === 'light' &&
       autoSettings.emailNotifications === true
@@ -60,7 +60,7 @@ async function testSettingsService() {
     console.log(`✅ Settings updated`);
     console.log(`   Theme: ${updatedSettings.theme} (should be "dark")`);
     console.log(`   Email Notifications: ${updatedSettings.emailNotifications} (should be false)`);
-    console.log(`   LLM Model: ${updatedSettings.llmModel} (should remain "gemini-2.0-flash-exp")`);
+    console.log(`   LLM Model: ${updatedSettings.llmModel} (should remain "gemini-2.0-flash")`);
 
     // Test 4: Verify cache was updated
     console.log('\n🔄 Test 4: Verify Cache Was Updated');
@@ -92,7 +92,7 @@ async function testSettingsService() {
     console.log('-'.repeat(60));
     const resetSettings = await settingsService.resetToDefault(testUserId);
     console.log(`✅ Settings reset to default`);
-    console.log(`   LLM Model: ${resetSettings.llmModel} (should be "gemini-2.0-flash-exp")`);
+    console.log(`   LLM Model: ${resetSettings.llmModel} (should be "gemini-2.0-flash")`);
     console.log(`   Language: ${resetSettings.preferredLanguage} (should be "en")`);
     console.log(`   Theme: ${resetSettings.theme} (should be "light")`);
     console.log(`   Email Notifications: ${resetSettings.emailNotifications} (should be true)`);

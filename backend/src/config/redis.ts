@@ -32,6 +32,23 @@ const redisConfig: RedisOptions = {
 
   // Show friendly error stack
   showFriendlyErrorStack: process.env.NODE_ENV === 'development',
+
+  // Connection pool configuration (for production performance)
+  // Keep alive to prevent connection drops
+  keepAlive: 30000,
+
+  // Auto pipelining for better performance
+  enableAutoPipelining: true,
+
+  // Reconnect on error
+  reconnectOnError: (err) => {
+    const targetErrors = ['READONLY', 'ECONNREFUSED', 'ETIMEDOUT'];
+    if (targetErrors.some((targetError) => err.message.includes(targetError))) {
+      logger.warn(`Redis reconnecting due to error: ${err.message}`);
+      return true;
+    }
+    return false;
+  },
 };
 
 // Create Redis client singleton
