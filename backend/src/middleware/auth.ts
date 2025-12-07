@@ -43,6 +43,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
     // Attach user to request object
     req.user = user;
     req.userId = user.id;
+    req.userRole = user.role;
 
     next();
   } catch (error) {

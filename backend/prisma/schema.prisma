@@ -24,6 +24,9 @@ model User {
   password  String
   name      String?
   role      UserRole @default(USER)
+  suspended Boolean  @default(false)
+  suspendedAt DateTime?
+  suspendedBy String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -31,8 +34,11 @@ model User {
   savedWords SavedWord[]
   settings   UserSettings?
   aiUsageLogs AIUsageLog[]
+  auditLogsAsTarget AuditLog[] @relation("AuditLogUser")
+  auditLogsAsActor  AuditLog[] @relation("AuditLogActor")
 
   @@index([email])
+  @@index([suspended])
   @@map("users")
 }
 
@@ -120,4 +126,26 @@ model AIUsageLog {
   @@index([createdAt])
   @@index([operation])
   @@map("ai_usage_logs")
+}
+
+// Audit Log Model (Track admin actions)
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorId     String   // Admin who performed the action
+  targetId    String?  // User affected by the action (nullable for system-wide actions)
+  action      String   // "suspend_user", "enable_user", "change_role", "reset_password", "update_settings"
+  details     Json?    // Additional context about the action
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  actor  User  @relation("AuditLogActor", fields: [actorId], references: [id], onDelete: Cascade)
+  target User? @relation("AuditLogUser", fields: [targetId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([targetId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
