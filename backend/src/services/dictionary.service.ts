@@ -1,7 +1,6 @@
 import { prisma } from '../config/database';
 import { cacheService } from './cache.service';
 import { freeDictionaryService } from './freeDictionary.service';
-import { getGeminiModel } from '../config/gemini';
 import { env } from '../config/env';
 import { DictionaryEntry } from '../types/dictionary.types';
 import { NotFoundError } from '../utils/errors';
@@ -10,12 +9,11 @@ import logger from '../utils/logger';
 /**
  * Dictionary Service
  * Intelligent multi-layer caching system for word definitions with fallback chain.
- * Implements 4-level cache strategy: Redis (L1) -> PostgreSQL (L2) -> Free Dictionary API (L3) -> Gemini AI (L4)
+ * Implements 3-level cache strategy: Redis (L1) -> PostgreSQL (L2) -> Free Dictionary API (L3)
  *
  * @description This service manages dictionary operations with intelligent caching to minimize
  * external API calls. It maintains access statistics for popular words and handles automatic
- * cache expiration. The service seamlessly falls back through multiple data sources to ensure
- * definitions are always available.
+ * cache expiration. The service seamlessly falls back through multiple data sources.
  *
  * @class
  * @example
@@ -29,9 +27,9 @@ class DictionaryService {
 
   /**
    * Search for a word with multi-layer intelligent caching
-   * @description Searches for a word definition through a 4-layer cache system. Checks Redis first,
-   * then PostgreSQL, then Free Dictionary API, and finally falls back to Gemini AI. Each layer
-   * automatically populates subsequent layers on hit. Updates access statistics for analytics.
+   * @description Searches for a word definition through a 3-layer cache system. Checks Redis first,
+   * then PostgreSQL, then Free Dictionary API. Each layer automatically populates subsequent
+   * layers on hit. Updates access statistics for analytics.
    *
    * @param {string} word - The word to search for (case-insensitive, whitespace trimmed)
    * @returns {Promise<DictionaryEntry|null>} Complete dictionary entry or null if not found
@@ -74,15 +72,7 @@ class DictionaryService {
         return apiEntry;
       }
 
-      // Layer 4: Fallback to Gemini AI
-      const aiEntry = await this.fetchFromGemini(normalizedWord);
-      if (aiEntry) {
-        logger.info(`Word defined by Gemini AI: ${normalizedWord}`);
-        await this.cacheEntry(normalizedWord, aiEntry, 'gemini_ai');
-        return aiEntry;
-      }
-
-      logger.info(`Word not found anywhere: ${normalizedWord}`);
+      logger.info(`Word not found in Free Dictionary API: ${normalizedWord}`);
       return null;
     } catch (error) {
       logger.error(`Error searching for word ${normalizedWord}:`, error);
@@ -254,64 +244,6 @@ class DictionaryService {
     }
   }
 
-  /**
-   * Fetch word definition from Gemini AI (Layer 4 - Final Fallback)
-   * @description Uses Gemini AI as the ultimate fallback when Free Dictionary API has no result.
-   * Constructs a detailed prompt requesting structured JSON output matching DictionaryEntry format.
-   * Returns null on any parsing or API errors instead of throwing.
-   *
-   * @param {string} word - The word to define using AI
-   * @returns {Promise<DictionaryEntry|null>} AI-generated dictionary entry or null on failure
-   * @private
-   *
-   * @example
-   * const aiDefinition = await this.fetchFromGemini('eloquent');
-   */
-  private async fetchFromGemini(word: string): Promise<DictionaryEntry | null> {
-    try {
-      const model = getGeminiModel();
-
-      const prompt = `Define the word "${word}" in a structured format. Include:
-1. Phonetic pronunciation (if applicable)
-2. All meanings with part of speech
-3. Example sentences
-4. Origin/etymology (if known)
-
-Format as JSON with this structure:
-{
-  "word": "${word}",
-  "phonetic": "pronunciation",
-  "meanings": [
-    {
-      "partOfSpeech": "noun/verb/etc",
-      "definitions": [
-        {
-          "definition": "...",
-          "example": "..."
-        }
-      ]
-    }
-  ],
-  "origin": "..."
-}`;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-
-      // Try to parse JSON from response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        return null;
-      }
-
-      const parsed = JSON.parse(jsonMatch[0]);
-      return parsed as DictionaryEntry;
-    } catch (error) {
-      logger.error(`Gemini AI error for word ${word}:`, error);
-      return null;
-    }
-  }
 
   /**
    * Add or update a word in the dictionary (Admin Operation)

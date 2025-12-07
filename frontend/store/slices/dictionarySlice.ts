@@ -6,10 +6,12 @@ import dictionaryApiService from '../../services/dictionaryApi';
 interface DictionaryState {
   words: SavedWord[];
   isOpen: boolean;
+  isMyWordsOpen: boolean;
   currentDefinition: WordDefinition | null;
   isDefining: boolean;
   isLoading: boolean;
   error: string | null;
+  recentLookups: WordDefinition[];
   pagination: {
     page: number;
     limit: number;
@@ -21,10 +23,12 @@ interface DictionaryState {
 const initialState: DictionaryState = {
   words: [],
   isOpen: false,
+  isMyWordsOpen: false,
   currentDefinition: null,
   isDefining: false,
   isLoading: false,
   error: null,
+  recentLookups: [],
   pagination: null,
 };
 
@@ -114,10 +118,20 @@ const dictionarySlice = createSlice({
   reducers: {
     openDictionary: (state) => {
       state.isOpen = true;
+      state.isMyWordsOpen = false;
     },
     
     closeDictionary: (state) => {
       state.isOpen = false;
+    },
+    
+    openMyWords: (state) => {
+      state.isMyWordsOpen = true;
+      state.isOpen = false;
+    },
+    
+    closeMyWords: (state) => {
+      state.isMyWordsOpen = false;
     },
     
     setCurrentDefinition: (state, action: PayloadAction<WordDefinition | null>) => {
@@ -130,6 +144,17 @@ const dictionarySlice = createSlice({
     
     clearCurrentDefinition: (state) => {
       state.currentDefinition = null;
+    },
+    
+    addToRecentLookups: (state, action: PayloadAction<WordDefinition>) => {
+      const exists = state.recentLookups.some(w => w.word === action.payload.word);
+      if (!exists) {
+        state.recentLookups = [action.payload, ...state.recentLookups.slice(0, 9)];
+      }
+    },
+    
+    clearRecentLookups: (state) => {
+      state.recentLookups = [];
     },
     
     clearError: (state) => {
@@ -219,9 +244,13 @@ const dictionarySlice = createSlice({
 export const {
   openDictionary,
   closeDictionary,
+  openMyWords,
+  closeMyWords,
   setCurrentDefinition,
   setIsDefining,
   clearCurrentDefinition,
+  addToRecentLookups,
+  clearRecentLookups,
   clearError,
 } = dictionarySlice.actions;
 

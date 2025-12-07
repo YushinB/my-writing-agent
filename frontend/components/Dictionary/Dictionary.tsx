@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { X, Search, Volume2, Star, Calendar, Loader, BookmarkPlus } from 'lucide-react';
+import { X, Search, Volume2, Loader, BookmarkPlus, Book, Clock, Check } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import {
   closeDictionary,
-  removeWordFromBackend,
   saveWordToBackend,
   setCurrentDefinition,
   clearCurrentDefinition,
   setIsDefining,
+  addToRecentLookups,
 } from '../../store/slices/dictionarySlice';
-import { SavedWord } from '../../types';
 import dictionaryService from '../../services/dictionary';
 
 // Animations
@@ -86,6 +85,9 @@ const Title = styled.h2`
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text};
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
 `;
 
 const CloseButton = styled.button`
@@ -171,65 +173,32 @@ const SectionTitle = styled.h3`
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0;
-`;
-
-const WordCount = styled.span`
-  color: ${({ theme }) => theme.colors.textTertiary};
-  font-size: ${({ theme }) => theme.fontSizes.xs};
-`;
-
-const SortButtons = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing.xs};
-`;
-
-const SortButton = styled.button<{ $active?: boolean }>`
-  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
-  font-size: ${({ theme }) => theme.fontSizes.xs};
-  font-weight: 600;
-  background-color: ${({ $active, theme }) =>
-    $active ? theme.colors.primary : 'transparent'};
-  color: ${({ $active, theme }) =>
-    $active ? 'white' : theme.colors.textSecondary};
-  border: 1px solid ${({ $active, theme }) =>
-    $active ? theme.colors.primary : theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.base};
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.xs};
-
-  &:hover {
-    background-color: ${({ $active, theme }) =>
-      $active ? theme.colors.primaryHover : theme.colors.surfaceHover};
-  }
 `;
 
-const WordsList = styled.div`
+const WordInfo = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.sm};
+  gap: 2px;
 `;
 
-const WordItem = styled.div<{ $active?: boolean }>`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
-  background-color: ${({ $active, theme }) =>
-    $active ? theme.colors.primaryLight : theme.colors.background};
-  border: 1px solid ${({ $active, theme }) =>
-    $active ? theme.colors.primary : theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.base};
+const WordMeta = styled.span`
+  font-size: ${({ theme }) => theme.fontSizes.xs};
+  color: ${({ theme }) => theme.colors.textTertiary};
+`;
 
-  &:hover {
-    background-color: ${({ $active, theme }) =>
-      $active ? theme.colors.primaryLight : theme.colors.surfaceHover};
-    border-color: ${({ theme }) => theme.colors.primary};
-  }
+const ErrorMessage = styled.div`
+  margin-top: 8px;
+  font-size: 12px;
+  color: #ef4444;
+`;
+
+const IPA = styled.span`
+  font-size: ${({ theme }) => theme.fontSizes.sm};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-family: monospace;
 `;
 
 const WordName = styled.span`
@@ -238,22 +207,26 @@ const WordName = styled.span`
   color: ${({ theme }) => theme.colors.text};
 `;
 
-const RemoveButton = styled.button`
-  width: 24px;
-  height: 24px;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+const WordsList = styled.div`
   display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.sm};
+`;
+
+const WordItem = styled.div`
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  background-color: transparent;
-  color: ${({ theme }) => theme.colors.textTertiary};
-  border: none;
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  background-color: ${({ theme }) => theme.colors.background};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
   cursor: pointer;
   transition: all ${({ theme }) => theme.transitions.base};
 
   &:hover {
-    background-color: #fee2e2;
-    color: #dc2626;
+    background-color: ${({ theme }) => theme.colors.surfaceHover};
+    border-color: ${({ theme }) => theme.colors.primary};
   }
 `;
 
@@ -277,23 +250,29 @@ const Word = styled.h2`
   margin: 0;
 `;
 
-const IconButton = styled.button`
+const IconButton = styled.button<{ $saved?: boolean; disabled?: boolean }>`
   width: 40px;
   height: 40px;
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }) => theme.colors.background};
-  color: ${({ theme }) => theme.colors.primary};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  cursor: pointer;
+  background-color: ${({ $saved, theme }) =>
+    $saved ? theme.colors.success + '20' : theme.colors.background};
+  color: ${({ $saved, theme }) =>
+    $saved ? theme.colors.success : theme.colors.primary};
+  border: 1px solid ${({ $saved, theme }) =>
+    $saved ? theme.colors.success : theme.colors.border};
+  cursor: ${({ disabled }) => (disabled ? 'default' : 'pointer')};
   transition: all ${({ theme }) => theme.transitions.base};
+  opacity: ${({ disabled }) => (disabled ? 0.7 : 1)};
 
   &:hover {
-    background-color: ${({ theme }) => theme.colors.primary};
-    color: white;
-    border-color: ${({ theme }) => theme.colors.primary};
+    background-color: ${({ $saved, disabled, theme }) =>
+      disabled ? ($saved ? theme.colors.success + '20' : theme.colors.background) : theme.colors.primary};
+    color: ${({ disabled }) => (disabled ? 'inherit' : 'white')};
+    border-color: ${({ disabled, theme }) =>
+      disabled ? 'inherit' : theme.colors.primary};
   }
 `;
 
@@ -386,18 +365,15 @@ const EmptyText = styled.p`
   margin: 0;
 `;
 
-type SortType = 'alphabetical' | 'date';
-
 interface DictionaryProps {}
 
 const Dictionary: React.FC<DictionaryProps> = () => {
   const dispatch = useAppDispatch();
-  const { words, isOpen, currentDefinition, isDefining } = useAppSelector(
+  const { words, isOpen, currentDefinition, isDefining, recentLookups } = useAppSelector(
     (state) => state.dictionary
   );
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortType, setSortType] = useState<SortType>('date');
   const [lookupError, setLookupError] = useState<string | null>(null);
 
   const handleClose = () => {
@@ -407,34 +383,10 @@ const Dictionary: React.FC<DictionaryProps> = () => {
     setLookupError(null);
   };
 
-  const handleRemoveWord = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    dispatch(removeWordFromBackend(id));
-    if (currentDefinition && words.find((w) => w.id === id)?.word === currentDefinition.word) {
-      dispatch(clearCurrentDefinition());
-    }
-  };
-
-  const handleSelectWord = (word: SavedWord) => {
-    dispatch(setCurrentDefinition(word));
-    setLookupError(null);
-  };
-
   const handleSearchKeyPress = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
       const query = searchQuery.trim();
 
-      // Check if word is already in saved words
-      const existingWord = words.find(
-        (w) => w.word.toLowerCase() === query.toLowerCase()
-      );
-
-      if (existingWord) {
-        handleSelectWord(existingWord);
-        return;
-      }
-
-      // Look up the word using the API
       dispatch(setIsDefining(true));
       setLookupError(null);
 
@@ -443,14 +395,22 @@ const Dictionary: React.FC<DictionaryProps> = () => {
 
         if (definition) {
           dispatch(setCurrentDefinition(definition));
+          dispatch(addToRecentLookups(definition));
         } else {
           setLookupError('Word not found. Please try another word.');
         }
-      } catch (error) {
+      } catch {
         setLookupError('Failed to look up word. Please try again.');
       } finally {
         dispatch(setIsDefining(false));
       }
+    }
+  };
+
+  const handleRecentClick = (word: string) => {
+    const recent = recentLookups.find((r) => r.word === word);
+    if (recent) {
+      dispatch(setCurrentDefinition(recent));
     }
   };
 
@@ -460,30 +420,19 @@ const Dictionary: React.FC<DictionaryProps> = () => {
     }
   };
 
-  const isWordSaved = currentDefinition && words.some(
+  const isWordSaved = currentDefinition ? words.some(
     (w) => w.word === currentDefinition.word
-  );
-
-  // Filter words based on search query
-  const filteredWords = words.filter((word) =>
-    word.word.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Sort words
-  const sortedWords = [...filteredWords].sort((a, b) => {
-    if (sortType === 'alphabetical') {
-      return a.word.localeCompare(b.word);
-    } else {
-      return b.dateAdded - a.dateAdded;
-    }
-  });
+  ) : false;
 
   return (
     <>
       <Overlay $show={isOpen} onClick={handleClose} />
       <Sidebar $show={isOpen}>
         <Header>
-          <Title>Dictionary</Title>
+          <Title>
+            <Book size={20} />
+            Dictionary
+          </Title>
           <CloseButton onClick={handleClose}>
             <X size={20} />
           </CloseButton>
@@ -504,78 +453,25 @@ const Dictionary: React.FC<DictionaryProps> = () => {
             />
           </SearchBox>
           {lookupError && (
-            <div style={{
-              marginTop: '8px',
-              fontSize: '12px',
-              color: '#ef4444'
-            }}>
+            <ErrorMessage>
               {lookupError}
-            </div>
+            </ErrorMessage>
           )}
         </SearchSection>
 
-        <SavedWordsSection>
-          <SectionHeader>
-            <div>
-              <SectionTitle>
-                Saved Words <WordCount>({words.length})</WordCount>
-              </SectionTitle>
-            </div>
-            <SortButtons>
-              <SortButton
-                $active={sortType === 'alphabetical'}
-                onClick={() => setSortType('alphabetical')}
-              >
-                A-Z
-              </SortButton>
-              <SortButton
-                $active={sortType === 'date'}
-                onClick={() => setSortType('date')}
-              >
-                <Calendar size={12} />
-              </SortButton>
-            </SortButtons>
-          </SectionHeader>
-
-          {sortedWords.length === 0 ? (
-            <EmptyState>
-              <EmptyIcon>
-                <Star size={24} />
-              </EmptyIcon>
-              <EmptyText>
-                {searchQuery
-                  ? 'No words found matching your search.'
-                  : 'No saved words yet. Start saving words to build your vocabulary!'}
-              </EmptyText>
-            </EmptyState>
-          ) : (
-            <WordsList>
-              {sortedWords.map((word) => (
-                <WordItem
-                  key={word.id}
-                  $active={currentDefinition?.word === word.word}
-                  onClick={() => handleSelectWord(word)}
-                >
-                  <WordName>{word.word}</WordName>
-                  <RemoveButton onClick={(e) => handleRemoveWord(word.id, e)}>
-                    <X size={16} />
-                  </RemoveButton>
-                </WordItem>
-              ))}
-            </WordsList>
-          )}
-        </SavedWordsSection>
-
-        {currentDefinition && (
+        {currentDefinition ? (
           <DetailsSection>
             <DetailsHeader>
               <Word>{currentDefinition.word}</Word>
               <div style={{ display: 'flex', gap: '8px' }}>
-                {!isWordSaved && (
-                  <IconButton onClick={handleSaveWord} title="Save word">
-                    <BookmarkPlus size={20} />
-                  </IconButton>
-                )}
+                <IconButton 
+                  onClick={handleSaveWord} 
+                  title={isWordSaved ? "Already saved" : "Save to My Words"}
+                  disabled={isWordSaved}
+                  $saved={isWordSaved}
+                >
+                  {isWordSaved ? <Check size={20} /> : <BookmarkPlus size={20} />}
+                </IconButton>
                 <IconButton title="Pronounce">
                   <Volume2 size={20} />
                 </IconButton>
@@ -583,18 +479,27 @@ const Dictionary: React.FC<DictionaryProps> = () => {
             </DetailsHeader>
 
             <Pronunciation>
-              <PartOfSpeech>{currentDefinition.partOfSpeech}</PartOfSpeech>
+              {currentDefinition.pronunciation && (
+                <IPA>{currentDefinition.pronunciation}</IPA>
+              )}
+              {currentDefinition.partOfSpeech && (
+                <PartOfSpeech>{currentDefinition.partOfSpeech}</PartOfSpeech>
+              )}
             </Pronunciation>
 
-            <DetailBlock>
-              <DetailLabel>Definition</DetailLabel>
-              <DetailText>{currentDefinition.definition}</DetailText>
-            </DetailBlock>
+            {currentDefinition.definition && (
+              <DetailBlock>
+                <DetailLabel>Definition</DetailLabel>
+                <DetailText>{currentDefinition.definition}</DetailText>
+              </DetailBlock>
+            )}
 
-            <DetailBlock>
-              <DetailLabel>Example</DetailLabel>
-              <ExampleText>"{currentDefinition.exampleSentence}"</ExampleText>
-            </DetailBlock>
+            {currentDefinition.exampleSentence && (
+              <DetailBlock>
+                <DetailLabel>Example</DetailLabel>
+                <ExampleText>"{currentDefinition.exampleSentence}"</ExampleText>
+              </DetailBlock>
+            )}
 
             {currentDefinition.synonyms && currentDefinition.synonyms.length > 0 && (
               <DetailBlock>
@@ -607,6 +512,42 @@ const Dictionary: React.FC<DictionaryProps> = () => {
               </DetailBlock>
             )}
           </DetailsSection>
+        ) : (
+          <SavedWordsSection>
+            <SectionHeader>
+              <SectionTitle>
+                <Clock size={14} />
+                Recent Lookups
+              </SectionTitle>
+            </SectionHeader>
+
+            {recentLookups.length === 0 ? (
+              <EmptyState>
+                <EmptyIcon>
+                  <Search size={24} />
+                </EmptyIcon>
+                <EmptyText>
+                  Search for a word above to see its definition.
+                  <br />
+                  Recent lookups will appear here.
+                </EmptyText>
+              </EmptyState>
+            ) : (
+              <WordsList>
+                {recentLookups.map((lookup, idx) => (
+                  <WordItem
+                    key={`${lookup.word}-${idx}`}
+                    onClick={() => handleRecentClick(lookup.word)}
+                  >
+                    <WordInfo>
+                      <WordName>{lookup.word}</WordName>
+                      <WordMeta>{lookup.partOfSpeech}</WordMeta>
+                    </WordInfo>
+                  </WordItem>
+                ))}
+              </WordsList>
+            )}
+          </SavedWordsSection>
         )}
       </Sidebar>
     </>

@@ -10,20 +10,36 @@ class DictionaryService {
     try {
       // Try backend dictionary API first
       const response = await dictionaryApiService.getWord(word);
-      
+
+      // Transform the backend response which has a 'meanings' array structure
+      // to the frontend's flattened WordDefinition structure
+      const firstMeaning = (response as any).meanings?.[0];
+      const firstDefinition = firstMeaning?.definitions?.[0];
+
+      // Collect all synonyms from all meanings
+      const allSynonyms: string[] = [];
+      if ((response as any).meanings) {
+        (response as any).meanings.forEach((meaning: any) => {
+          if (meaning.synonyms) allSynonyms.push(...meaning.synonyms);
+          meaning.definitions?.forEach((def: any) => {
+            if (def.synonyms) allSynonyms.push(...def.synonyms);
+          });
+        });
+      }
+
       const definition: WordDefinition = {
         word: response.word,
-        definition: response.definitions?.[0]?.definition || '',
-        partOfSpeech: response.partOfSpeech || '',
-        exampleSentence: response.definitions?.[0]?.example || '',
-        synonyms: response.synonyms || [],
-        pronunciation: response.pronunciation,
+        definition: firstDefinition?.definition || '',
+        partOfSpeech: firstMeaning?.partOfSpeech || '',
+        exampleSentence: firstDefinition?.example || '',
+        synonyms: allSynonyms.length > 0 ? [...new Set(allSynonyms)] : [],
+        pronunciation: (response as any).phonetic || response.pronunciation,
       };
-      
+
       return definition;
     } catch (error) {
       console.error('Dictionary lookup error:', error);
-      
+
       // Fallback to LLM define endpoint
       try {
         const llmResponse = await llmService.defineWord({ word });
@@ -55,11 +71,11 @@ class DictionaryService {
    * Look up a word from selected text in the editor
    */
   async lookupSelectedWord(selectedText: string): Promise<WordDefinition | null> {
-    // Clean up the selected text (remove punctuation, extra spaces)
-    const cleanWord = selectedText.trim().replace(/[^\w\s]/g, '').toLowerCase();
+    // Clean up the selected text (remove extra spaces and trim)
+    const cleanWord = selectedText.trim().replace(/\s+/g, ' ').toLowerCase();
 
-    // Only look up single words
-    if (cleanWord.split(' ').length > 1) {
+    // Allow up to 3 words (to support phrases like "take off", "give up", etc.)
+    if (cleanWord.split(' ').length > 3) {
       return null;
     }
 

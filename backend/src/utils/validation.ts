@@ -15,12 +15,13 @@ export const passwordSchema = z
 // UUID validation
 export const uuidSchema = z.string().uuid('Invalid UUID format');
 
-// Word validation (letters, hyphens, apostrophes only)
+// Word validation (letters, numbers, hyphens, apostrophes, and spaces for phrases/idioms)
 export const wordSchema = z
   .string()
   .min(1, 'Word cannot be empty')
-  .max(50, 'Word is too long')
-  .regex(/^[a-zA-Z\-']+$/, 'Word contains invalid characters');
+  .max(100, 'Word is too long')
+  .regex(/^[a-zA-Z0-9\-'\s]+$/, 'Word contains invalid characters')
+  .transform((val) => val.trim());
 
 // Name validation
 export const nameSchema = z

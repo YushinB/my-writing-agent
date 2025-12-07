@@ -1,5 +1,5 @@
 import React from 'react';
-import { PenLine, Book, Sun, Moon, Settings } from 'lucide-react';
+import { PenLine, Book, Sun, Moon, Settings, Library } from 'lucide-react';
 import { Header, Logo, LogoIcon, LogoText, HeaderActions, SignOutButton, IconButton } from '../../Common/Styled';
 
 interface AppHeaderProps {
@@ -8,6 +8,7 @@ interface AppHeaderProps {
   onThemeToggle: () => void;
   onSettings: () => void;
   onOpenDictionary: () => void;
+  onOpenMyWords: () => void;
   onSignOut: () => void;
 }
 
@@ -17,6 +18,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onThemeToggle,
   onSettings,
   onOpenDictionary,
+  onOpenMyWords,
   onSignOut,
 }) => {
   return (
@@ -38,6 +40,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         )}
         <IconButton onClick={onOpenDictionary} title="Dictionary">
           <Book size={20} />
+        </IconButton>
+        <IconButton onClick={onOpenMyWords} title="My Words">
+          <Library size={20} />
         </IconButton>
         <SignOutButton onClick={onSignOut}>
           Sign Out

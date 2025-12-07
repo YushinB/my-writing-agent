@@ -5,10 +5,11 @@ import { setInputText } from '../../store/slices/editorSlice';
 import { analyzeText} from '../../store/slices/analysisSlice';
 import { toggleTheme } from '../../store/slices/settingsSlice';
 import { logout, setCurrentView } from '../../store/slices/authSlice';
-import { openDictionary, saveWordToBackend } from '../../store/slices/dictionarySlice';
+import { openDictionary, openMyWords, saveWordToBackend } from '../../store/slices/dictionarySlice';
 import geminiService from '../../services/gemini';
 import { WritingStyle, WordDefinition, LiveSuggestion } from '../../types';
 import Dictionary from '../Dictionary/Dictionary';
+import MyWords from '../MyWords/MyWords';
 import {AppHeader,GrammarCheckView, PhrasingView, WordLookupPopover, StyleSelector, LiveSuggestionPanel} from './components';
 
 // Import common styled components
@@ -134,6 +135,10 @@ const WritingStudio: React.FC = () => {
     dispatch(openDictionary());
   };
 
+  const handleOpenMyWords = () => {
+    dispatch(openMyWords());
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
   };
@@ -190,6 +195,7 @@ const WritingStudio: React.FC = () => {
         onThemeToggle={handleThemeToggle}
         onSettings={handleSettings}
         onOpenDictionary={handleOpenDictionary}
+        onOpenMyWords={handleOpenMyWords}
         onSignOut={handleSignOut}>
       </AppHeader>
       <MainContent>
@@ -316,6 +322,9 @@ const WritingStudio: React.FC = () => {
 
       {/* Dictionary Sidebar */}
       <Dictionary />
+
+      {/* My Words Sidebar */}
+      <MyWords />
 
       {/* Word Selection Popover */}
       <WordLookupPopover
