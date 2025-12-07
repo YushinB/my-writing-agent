@@ -103,13 +103,13 @@ const TabBar = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
-const Tab = styled.button<{ active: boolean }>`
+const Tab = styled.button<{ $active: boolean }>`
   padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.xl};
-  background-color: ${({ active, theme }) => active ? theme.colors.background : 'transparent'};
+  background-color: ${({ $active, theme }) => $active ? theme.colors.background : 'transparent'};
   border: none;
-  border-bottom: 2px solid ${({ active, theme }) => active ? theme.colors.primary : 'transparent'};
-  color: ${({ active, theme }) => active ? theme.colors.primary : theme.colors.textSecondary};
-  font-weight: ${({ active }) => active ? '600' : '400'};
+  border-bottom: 2px solid ${({ $active, theme }) => $active ? theme.colors.primary : 'transparent'};
+  color: ${({ $active, theme }) => $active ? theme.colors.primary : theme.colors.textSecondary};
+  font-weight: ${({ $active }) => $active ? '600' : '400'};
   cursor: pointer;
   transition: all ${({ theme }) => theme.transitions.base};
 
@@ -374,8 +374,14 @@ const AdminDashboard: React.FC = () => {
         setAuditLogs(response.logs);
         setTotalPages(response.pagination.totalPages);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
+    } catch (err: any) {
+      console.error('Admin API error:', err);
+      const errorMessage = err.response?.data?.error?.message 
+        || err.response?.data?.message 
+        || err.message 
+        || 'Failed to load data';
+      const hint = err.response?.status === 404 ? ' Make sure the backend server is running at http://localhost:3000.' : '';
+      setError(`${errorMessage}.${hint}`);
     } finally {
       setLoading(false);
     }
@@ -437,13 +443,13 @@ const AdminDashboard: React.FC = () => {
       </Header>
 
       <TabBar>
-        <Tab active={activeTab === 'users'} onClick={() => { setActiveTab('users'); setCurrentPage(1); }}>
+        <Tab $active={activeTab === 'users'} onClick={() => { setActiveTab('users'); setCurrentPage(1); }}>
           Users
         </Tab>
-        <Tab active={activeTab === 'system'} onClick={() => setActiveTab('system')}>
+        <Tab $active={activeTab === 'system'} onClick={() => setActiveTab('system')}>
           System Status
         </Tab>
-        <Tab active={activeTab === 'audit'} onClick={() => { setActiveTab('audit'); setCurrentPage(1); }}>
+        <Tab $active={activeTab === 'audit'} onClick={() => { setActiveTab('audit'); setCurrentPage(1); }}>
           Audit Logs
         </Tab>
       </TabBar>

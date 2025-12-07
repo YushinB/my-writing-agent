@@ -36,8 +36,8 @@ const Login: React.FC = () => {
 
   const handleQuickLogin = (role: 'user' | 'admin') => {
     const credentials = role === 'admin' 
-      ? { email: 'admin@prosepolish.com', password: 'AdminPass123!' }
-      : { email: 'testuser@example.com', password: 'TestPass123!' };
+      ? { email: 'admin@prosepolish.com', password: 'Tsvs7345SecureAdmin2024!' }
+      : { email: 'yushin@prosepolish.com', password: 'TestPass123!' };
     
     setEmail(credentials.email);
     setPassword(credentials.password);
