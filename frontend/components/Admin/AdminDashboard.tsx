@@ -8,11 +8,18 @@ type TabType = 'users' | 'system' | 'audit';
 
 interface ModalState {
   isOpen: boolean;
-  type: 'suspend' | 'enable' | 'role' | null;
+  type: 'suspend' | 'enable' | 'role' | 'create' | 'delete' | null;
   userId: string | null;
   userEmail: string | null;
   currentRole?: 'user' | 'admin';
   reason?: string;
+}
+
+interface CreateUserForm {
+  email: string;
+  name: string;
+  password: string;
+  role: 'ADMIN' | 'USER';
 }
 
 const Container = styled.div`
@@ -303,14 +310,21 @@ const ModalActions = styled.div`
   gap: ${({ theme }) => theme.spacing.md};
 `;
 
-const ModalButton = styled.button<{ primary?: boolean }>`
+const ModalButton = styled.button<{ primary?: boolean; danger?: boolean }>`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.lg};
-  background-color: ${({ primary, theme }) => primary ? theme.colors.primary : theme.colors.border};
-  color: ${({ primary }) => primary ? 'white' : 'inherit'};
+  background-color: ${({ primary, danger, theme }) => 
+    danger ? '#ef4444' : 
+    primary ? theme.colors.primary : 
+    theme.colors.border};
+  color: ${({ primary, danger }) => (primary || danger) ? 'white' : 'inherit'};
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.md};
   font-weight: 500;
   cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+  }
 
   &:disabled {
     opacity: 0.5;
@@ -324,6 +338,23 @@ const Input = styled.input`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md};
   margin-top: ${({ theme }) => theme.spacing.md};
+`;
+
+const UserToolbar = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+`;
+
+const FormLabel = styled.label`
+  display: block;
+  font-weight: 500;
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
+  color: ${({ theme }) => theme.colors.text};
 `;
 
 const AdminDashboard: React.FC = () => {
@@ -346,6 +377,13 @@ const AdminDashboard: React.FC = () => {
     type: null,
     userId: null,
     userEmail: null,
+  });
+
+  const [createUserForm, setCreateUserForm] = useState<CreateUserForm>({
+    email: '',
+    name: '',
+    password: '',
+    role: 'USER',
   });
 
   useEffect(() => {
@@ -391,8 +429,11 @@ const AdminDashboard: React.FC = () => {
     dispatch(setCurrentView('writing'));
   };
 
-  const openModal = (type: 'suspend' | 'enable' | 'role', userId: string, userEmail: string, currentRole?: 'user' | 'admin') => {
-    setModal({ isOpen: true, type, userId, userEmail, currentRole, reason: '' });
+  const openModal = (type: 'suspend' | 'enable' | 'role' | 'create' | 'delete', userId?: string, userEmail?: string, currentRole?: 'user' | 'admin') => {
+    if (type === 'create') {
+      setCreateUserForm({ email: '', name: '', password: '', role: 'USER' });
+    }
+    setModal({ isOpen: true, type, userId: userId || null, userEmail: userEmail || null, currentRole, reason: '' });
   };
 
   const closeModal = () => {
@@ -400,16 +441,29 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleUserAction = async () => {
-    if (!modal.userId) return;
-    
     setLoading(true);
     setError(null);
     try {
-      if (modal.type === 'suspend') {
+      if (modal.type === 'create') {
+        // Validate create user form
+        if (!createUserForm.email || !createUserForm.name || !createUserForm.password) {
+          setError('All fields are required');
+          setLoading(false);
+          return;
+        }
+        if (createUserForm.password.length < 8) {
+          setError('Password must be at least 8 characters long');
+          setLoading(false);
+          return;
+        }
+        await adminService.createUser(createUserForm);
+      } else if (modal.type === 'delete' && modal.userId) {
+        await adminService.deleteUser(modal.userId);
+      } else if (modal.type === 'suspend' && modal.userId) {
         await adminService.suspendUser(modal.userId, modal.reason);
-      } else if (modal.type === 'enable') {
+      } else if (modal.type === 'enable' && modal.userId) {
         await adminService.enableUser(modal.userId);
-      } else if (modal.type === 'role' && modal.currentRole) {
+      } else if (modal.type === 'role' && modal.userId && modal.currentRole) {
         const newRole = modal.currentRole === 'admin' ? 'USER' : 'ADMIN';
         await adminService.changeUserRole(modal.userId, newRole);
       }
@@ -459,6 +513,9 @@ const AdminDashboard: React.FC = () => {
 
         {activeTab === 'users' && (
           <>
+            <UserToolbar>
+              <Button onClick={() => openModal('create')}>Add User</Button>
+            </UserToolbar>
             <FilterBar>
               <SearchInput
                 type="text"
@@ -532,6 +589,12 @@ const AdminDashboard: React.FC = () => {
                               Suspend
                             </ActionButton>
                           )}
+                          <ActionButton
+                            danger
+                            onClick={() => openModal('delete', user.id, user.email)}
+                          >
+                            Delete
+                          </ActionButton>
                         </Td>
                       </tr>
                     ))}
@@ -677,31 +740,88 @@ const AdminDashboard: React.FC = () => {
               {modal.type === 'suspend' && 'Suspend User'}
               {modal.type === 'enable' && 'Enable User'}
               {modal.type === 'role' && 'Change User Role'}
+              {modal.type === 'create' && 'Create New User'}
+              {modal.type === 'delete' && 'Delete User'}
             </ModalTitle>
             <ModalBody>
-              <p>User: <strong>{modal.userEmail}</strong></p>
-              {modal.type === 'suspend' && (
+              {modal.type === 'create' ? (
                 <>
-                  <p>Are you sure you want to suspend this user?</p>
-                  <Input
-                    type="text"
-                    placeholder="Reason (optional)"
-                    value={modal.reason || ''}
-                    onChange={(e) => setModal({ ...modal, reason: e.target.value })}
-                  />
+                  <FormGroup>
+                    <FormLabel>Email *</FormLabel>
+                    <Input
+                      type="email"
+                      placeholder="user@example.com"
+                      value={createUserForm.email}
+                      onChange={(e) => setCreateUserForm({ ...createUserForm, email: e.target.value })}
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <FormLabel>Name *</FormLabel>
+                    <Input
+                      type="text"
+                      placeholder="Full Name"
+                      value={createUserForm.name}
+                      onChange={(e) => setCreateUserForm({ ...createUserForm, name: e.target.value })}
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <FormLabel>Password * (min 8 characters)</FormLabel>
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      value={createUserForm.password}
+                      onChange={(e) => setCreateUserForm({ ...createUserForm, password: e.target.value })}
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <FormLabel>Role *</FormLabel>
+                    <Select 
+                      value={createUserForm.role}
+                      onChange={(e) => setCreateUserForm({ ...createUserForm, role: e.target.value as 'ADMIN' | 'USER' })}
+                    >
+                      <option value="USER">User</option>
+                      <option value="ADMIN">Admin</option>
+                    </Select>
+                  </FormGroup>
                 </>
-              )}
-              {modal.type === 'enable' && (
-                <p>Are you sure you want to enable this user?</p>
-              )}
-              {modal.type === 'role' && (
-                <p>Change role from <strong>{modal.currentRole}</strong> to <strong>{modal.currentRole === 'admin' ? 'user' : 'admin'}</strong>?</p>
+              ) : modal.type === 'delete' ? (
+                <>
+                  <p>User: <strong>{modal.userEmail}</strong></p>
+                  <p style={{ color: '#ef4444' }}>⚠️ Are you sure you want to delete this user? This action cannot be undone.</p>
+                  <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>All associated data (saved words, settings, etc.) will be permanently deleted.</p>
+                </>
+              ) : (
+                <>
+                  <p>User: <strong>{modal.userEmail}</strong></p>
+                  {modal.type === 'suspend' && (
+                    <>
+                      <p>Are you sure you want to suspend this user?</p>
+                      <Input
+                        type="text"
+                        placeholder="Reason (optional)"
+                        value={modal.reason || ''}
+                        onChange={(e) => setModal({ ...modal, reason: e.target.value })}
+                      />
+                    </>
+                  )}
+                  {modal.type === 'enable' && (
+                    <p>Are you sure you want to enable this user?</p>
+                  )}
+                  {modal.type === 'role' && (
+                    <p>Change role from <strong>{modal.currentRole}</strong> to <strong>{modal.currentRole === 'admin' ? 'user' : 'admin'}</strong>?</p>
+                  )}
+                </>
               )}
             </ModalBody>
             <ModalActions>
               <ModalButton onClick={closeModal}>Cancel</ModalButton>
-              <ModalButton primary onClick={handleUserAction} disabled={loading}>
-                {loading ? 'Processing...' : 'Confirm'}
+              <ModalButton 
+                primary={modal.type !== 'delete'} 
+                danger={modal.type === 'delete'}
+                onClick={handleUserAction} 
+                disabled={loading}
+              >
+                {loading ? 'Processing...' : (modal.type === 'create' ? 'Create User' : 'Confirm')}
               </ModalButton>
             </ModalActions>
           </ModalContent>

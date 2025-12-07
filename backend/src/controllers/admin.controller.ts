@@ -71,6 +71,49 @@ export const changeUserRole = asyncHandler(async (req: Request, res: Response) =
 });
 
 /**
+ * @route   POST /api/admin/users
+ * @desc    Create a new user
+ * @access  Admin
+ */
+export const createUser = asyncHandler(async (req: Request, res: Response) => {
+  const { email, name, password, role } = req.body;
+  const actorId = req.userId!;
+
+  // Validate required fields
+  if (!email || !name || !password) {
+    throw new BadRequestError('Email, name, and password are required');
+  }
+
+  // Validate role if provided
+  if (role && !Object.values(UserRole).includes(role)) {
+    throw new BadRequestError('Invalid role. Must be ADMIN or USER');
+  }
+
+  const user = await adminService.createUser(
+    { email, name, password, role: role as UserRole | undefined },
+    actorId
+  );
+
+  res.status(201).json({
+    message: 'User created successfully',
+    user,
+  });
+});
+
+/**
+ * @route   DELETE /api/admin/users/:id
+ * @desc    Delete a user account
+ * @access  Admin
+ */
+export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const actorId = req.userId!;
+
+  await adminService.deleteUser(id, actorId);
+  res.json({ message: 'User deleted successfully' });
+});
+
+/**
  * @route   GET /api/admin/system/status
  * @desc    Get system health and statistics
  * @access  Admin

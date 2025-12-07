@@ -1,13 +1,14 @@
 import { UserRole } from '@prisma/client';
 import { prisma } from '../config/database';
 import redisClient from '../config/redis';
-import { BadRequestError, NotFoundError } from '../utils/errors';
+import { BadRequestError, NotFoundError, ConflictError } from '../utils/errors';
 import {
   GetUsersRequest,
   UserListResponse,
   SystemStatus,
   AuditLogEntry,
   AuditLogResponse,
+  CreateUserRequest,
 } from '../types/admin.types';
 
 export class AdminService {
@@ -335,6 +336,117 @@ export class AdminService {
         details: details as any || undefined,
         ipAddress,
       },
+    });
+  }
+
+  /**
+   * Create a new user (admin function)
+   */
+  async createUser(
+    data: CreateUserRequest,
+    actorId: string
+  ): Promise<{ id: string; email: string; name: string; role: UserRole }> {
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictError('User with this email already exists');
+    }
+
+    // Validate password strength
+    if (data.password.length < 8) {
+      throw new BadRequestError('Password must be at least 8 characters long');
+    }
+
+    // Hash password
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        email: data.email,
+        name: data.name,
+        password: hashedPassword,
+        role: data.role || UserRole.USER,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+    });
+
+    // Create default settings
+    await prisma.userSettings.create({
+      data: {
+        userId: user.id,
+      },
+    });
+
+    // Create audit log
+    await this.createAuditLog(
+      'USER_CREATED',
+      actorId,
+      user.id,
+      {
+        email: user.email,
+        role: user.role,
+      }
+    );
+
+    return {
+      ...user,
+      name: user.name || data.name, // Use provided name if Prisma returns null
+    };
+  }
+
+  /**
+   * Delete a user (admin function)
+   */
+  async deleteUser(userId: string, actorId: string): Promise<void> {
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, role: true },
+    });
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Prevent deleting the last admin
+    if (user.role === UserRole.ADMIN) {
+      const adminCount = await prisma.user.count({
+        where: { role: UserRole.ADMIN },
+      });
+      if (adminCount <= 1) {
+        throw new BadRequestError('Cannot delete the last admin user');
+      }
+    }
+
+    // Prevent self-deletion
+    if (userId === actorId) {
+      throw new BadRequestError('Cannot delete your own account');
+    }
+
+    // Create audit log before deletion
+    await this.createAuditLog(
+      'USER_DELETED',
+      actorId,
+      userId,
+      {
+        email: user.email,
+        role: user.role,
+      }
+    );
+
+    // Delete user (cascade will handle related records)
+    await prisma.user.delete({
+      where: { id: userId },
     });
   }
 }

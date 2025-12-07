@@ -137,6 +137,75 @@ router.put('/users/:id/role', adminController.changeUserRole);
 
 /**
  * @swagger
+ * /api/admin/users:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Create a new user
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - name
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User email address
+ *               name:
+ *                 type: string
+ *                 description: User full name
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: User password (min 8 characters)
+ *               role:
+ *                 type: string
+ *                 enum: [ADMIN, USER]
+ *                 description: User role (optional, defaults to USER)
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *       400:
+ *         description: Invalid input
+ *       409:
+ *         description: User already exists
+ */
+router.post('/users', adminController.createUser);
+
+/**
+ * @swagger
+ * /api/admin/users/{id}:
+ *   delete:
+ *     tags: [Admin]
+ *     summary: Delete a user account
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       400:
+ *         description: Cannot delete user (last admin or self-deletion)
+ *       404:
+ *         description: User not found
+ */
+router.delete('/users/:id', adminController.deleteUser);
+
+/**
+ * @swagger
  * /api/admin/system/status:
  *   get:
  *     tags: [Admin]

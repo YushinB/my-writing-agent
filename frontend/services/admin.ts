@@ -104,6 +104,38 @@ export const changeUserRole = async (userId: string, role: 'ADMIN' | 'USER'): Pr
   await apiClient.put(`/admin/users/${userId}/role`, { role });
 };
 
+export interface CreateUserData {
+  email: string;
+  name: string;
+  password: string;
+  role?: 'ADMIN' | 'USER';
+}
+
+export interface CreateUserResponse {
+  message: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: 'ADMIN' | 'USER';
+  };
+}
+
+/**
+ * Create a new user
+ */
+export const createUser = async (data: CreateUserData): Promise<CreateUserResponse> => {
+  const response = await apiClient.post<CreateUserResponse>('/admin/users', data);
+  return response.data;
+};
+
+/**
+ * Delete a user account
+ */
+export const deleteUser = async (userId: string): Promise<void> => {
+  await apiClient.delete(`/admin/users/${userId}`);
+};
+
 /**
  * Get system health and statistics
  */

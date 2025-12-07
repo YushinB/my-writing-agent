@@ -25,6 +25,14 @@ export interface SuspendUserRequest {
   reason?: string;
 }
 
+// Create user request
+export interface CreateUserRequest {
+  email: string;
+  name: string;
+  password: string;
+  role?: UserRole;
+}
+
 // Reset password request
 export interface ResetPasswordRequest {
   newPassword: string;
