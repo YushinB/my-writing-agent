@@ -37,7 +37,7 @@ export interface UserResponse {
   id: string;
   email: string;
   name: string | null;
-  role: UserRole;
+  role: 'user' | 'admin';
   createdAt: Date;
   updatedAt: Date;
 }

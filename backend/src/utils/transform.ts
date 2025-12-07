@@ -12,7 +12,7 @@ export function transformUser(user: User): UserResponse {
     id: user.id,
     email: user.email,
     name: user.name,
-    role: user.role,
+    role: user.role.toLowerCase() as 'user' | 'admin',
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };

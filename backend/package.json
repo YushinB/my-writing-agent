@@ -29,6 +29,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "ts-node prisma/seed.ts",
+    "db:seed:prod": "ts-node prisma/seed.prod.ts",
     "db:reset": "prisma migrate reset",
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",

@@ -12,6 +12,7 @@ build/
 .env
 .env.local
 .env.*.local
+# Note: .env.production is explicitly COPIED in Dockerfile and renamed to .env
 
 # Testing
 coverage/
