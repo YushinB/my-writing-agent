@@ -5,6 +5,9 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
+  displayName?: string | null;
+  avatar?: string | null;
+  hobbies?: string | null;
   role: 'user' | 'admin';
   createdAt?: string;
 }

@@ -8,7 +8,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  currentView: 'login' | 'writing' | 'admin';
+  currentView: 'login' | 'writing' | 'admin' | 'profile';
 }
 
 const initialState: AuthState = {
@@ -24,6 +24,9 @@ const toUser = (authUser: AuthUser): User => ({
   id: authUser.id,
   email: authUser.email,
   name: authUser.name,
+  displayName: authUser.displayName,
+  avatar: authUser.avatar,
+  hobbies: authUser.hobbies,
   role: authUser.role,
 });
 
@@ -114,12 +117,19 @@ const authSlice = createSlice({
       tokenStorage.clearTokens();
     },
     
-    setCurrentView: (state, action: PayloadAction<'login' | 'writing' | 'admin'>) => {
+    setCurrentView: (state, action: PayloadAction<'login' | 'writing' | 'admin' | 'profile'>) => {
       state.currentView = action.payload;
     },
     
     clearError: (state) => {
       state.error = null;
+    },
+
+    updateUserProfile: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+        localStorage.setItem('pp_user', JSON.stringify(state.user));
+      }
     },
   },
   extraReducers: (builder) => {
@@ -190,5 +200,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, setCurrentView, clearError } = authSlice.actions;
+export const { logout, setCurrentView, clearError, updateUserProfile } = authSlice.actions;
 export default authSlice.reducer;

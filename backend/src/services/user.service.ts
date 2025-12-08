@@ -177,6 +177,49 @@ class UserService {
   }
 
   /**
+   * Update user profile
+   * @param userId - User ID
+   * @param data - Profile data to update
+   * @returns Updated user
+   */
+  async updateProfile(
+    userId: string,
+    data: {
+      displayName?: string;
+      avatar?: string | null;
+      hobbies?: string;
+    }
+  ): Promise<User> {
+    try {
+      // Check if user exists
+      const existingUser = await this.getUserById(userId);
+      if (!existingUser) {
+        throw new NotFoundError('User not found');
+      }
+
+      // Update profile
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          ...(data.displayName !== undefined && { displayName: data.displayName }),
+          ...(data.avatar !== undefined && { avatar: data.avatar }),
+          ...(data.hobbies !== undefined && { hobbies: data.hobbies }),
+        },
+      });
+
+      logger.info(`User profile updated: ${user.id}`);
+
+      // Update cache
+      await this.cacheUser(user);
+
+      return user;
+    } catch (error) {
+      logger.error(`Error updating user profile ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Delete user
    * @param userId - User ID
    */

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useAppDispatch } from '../../store';
+import { User } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../../store';
 import { setCurrentView } from '../../store/slices/authSlice';
 import * as adminService from '../../services/admin';
 
@@ -38,10 +39,66 @@ const Header = styled.header`
   align-items: center;
 `;
 
+const HeaderLeft = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const HeaderRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.md};
+`;
+
 const Title = styled.h1`
   font-size: ${({ theme }) => theme.fontSizes['2xl']};
   font-weight: 600;
   color: ${({ theme }) => theme.colors.primary};
+`;
+
+const UserInfo = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceHover};
+    border-color: ${({ theme }) => theme.colors.borderHover};
+  }
+`;
+
+const UserAvatar = styled.img`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+`;
+
+const UserAvatarPlaceholder = styled.div`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+const UserName = styled.span`
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.colors.text};
+  font-weight: 500;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 const Button = styled.button`
@@ -489,11 +546,28 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const user = useAppSelector((state) => state.auth.user);
+  const displayName = user?.displayName || user?.name || user?.email?.split('@')[0] || 'Admin';
+
   return (
     <Container>
       <Header>
-        <Title>Admin Dashboard</Title>
-        <Button onClick={handleBackToEditor}>Back to Editor</Button>
+        <HeaderLeft>
+          <Title>Admin Dashboard</Title>
+        </HeaderLeft>
+        <HeaderRight>
+          <UserInfo onClick={() => dispatch(setCurrentView('profile'))} title="View Profile">
+            {user?.avatar ? (
+              <UserAvatar src={user.avatar} alt={displayName} />
+            ) : (
+              <UserAvatarPlaceholder>
+                <User size={18} />
+              </UserAvatarPlaceholder>
+            )}
+            <UserName>{displayName}</UserName>
+          </UserInfo>
+          <Button onClick={handleBackToEditor}>Back to Editor</Button>
+        </HeaderRight>
       </Header>
 
       <TabBar>

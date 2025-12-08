@@ -27,6 +27,12 @@ model User {
   suspended Boolean  @default(false)
   suspendedAt DateTime?
   suspendedBy String?
+
+  // Profile fields
+  displayName String?
+  avatar      String?  // URL or path to avatar image
+  hobbies     String?  // Stored as comma-separated or JSON string
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

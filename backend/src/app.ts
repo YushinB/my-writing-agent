@@ -1,5 +1,6 @@
 import express, { Application } from 'express';
 import morgan from 'morgan';
+import path from 'path';
 import corsMiddleware from './middleware/cors';
 import { generalRateLimiter } from './middleware/rateLimiter';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
@@ -65,6 +66,9 @@ function createApp(): Application {
 
   // Rate limiting (general)
   app.use('/api', generalRateLimiter);
+
+  // Serve static files for uploads
+  app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
   // API routes
   app.use('/api', routes);

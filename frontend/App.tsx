@@ -7,6 +7,7 @@ import { lightTheme, darkTheme } from './styles/theme';
 import Login from './components/Auth/Login';
 import WritingStudio from './components/WritingStudio/WritingStudio';
 import AdminDashboard from './components/Admin/AdminDashboard';
+import ProfilePage from './components/Profile/ProfilePage';
 
 // Main application content based on authentication and view state
 // separated for clarity
@@ -19,6 +20,10 @@ const AppContent: React.FC = () => {
 
   if (currentView === 'admin') {
     return <AdminDashboard />;
+  }
+
+  if (currentView === 'profile') {
+    return <ProfilePage />;
   }
 
   return <WritingStudio />;

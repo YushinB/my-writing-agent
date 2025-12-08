@@ -35,6 +35,10 @@ export type {
 export { default as settingsService } from './settings';
 export type { UserSettings, UpdateSettingsRequest } from './settings';
 
+// Profile service
+export { default as profileService } from './profile';
+export type { ProfileResponse } from './profile';
+
 // Legacy services (direct Gemini API - for backwards compatibility)
 export { default as geminiService, analyzeText, defineWord, getLiveSuggestion } from './gemini';
 export { default as dictionaryService } from './dictionary';

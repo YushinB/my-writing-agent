@@ -37,6 +37,9 @@ export interface UserResponse {
   id: string;
   email: string;
   name: string | null;
+  displayName?: string | null;
+  avatar?: string | null;
+  hobbies?: string | null;
   role: 'user' | 'admin';
   createdAt: Date;
   updatedAt: Date;

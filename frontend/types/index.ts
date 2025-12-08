@@ -79,7 +79,15 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  displayName?: string | null;
+  avatar?: string | null;
+  hobbies?: string | null;
   role: UserRole;
+}
+
+export interface ProfileUpdateData {
+  displayName?: string;
+  hobbies?: string;
 }
 
 export type AppFont = 'inter' | 'merriweather' | 'playfair' | 'roboto-mono';

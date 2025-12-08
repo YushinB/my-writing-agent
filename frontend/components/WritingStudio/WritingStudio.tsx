@@ -139,6 +139,10 @@ const WritingStudio: React.FC = () => {
     dispatch(openMyWords());
   };
 
+  const handleOpenProfile = () => {
+    dispatch(setCurrentView('profile'));
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
   };
@@ -192,10 +196,15 @@ const WritingStudio: React.FC = () => {
       <AppHeader
         currentTheme={currentTheme}
         userRole={user?.role}
+        userName={user?.name}
+        userEmail={user?.email}
+        userAvatar={user?.avatar}
+        userDisplayName={user?.displayName}
         onThemeToggle={handleThemeToggle}
         onSettings={handleSettings}
         onOpenDictionary={handleOpenDictionary}
         onOpenMyWords={handleOpenMyWords}
+        onOpenProfile={handleOpenProfile}
         onSignOut={handleSignOut}>
       </AppHeader>
       <MainContent>
