@@ -51,6 +51,8 @@ export interface SavedWord extends WordDefinition {
   id: string;
   dateAdded: number;
   notes?: string;
+  tags?: string[];
+  favorite?: boolean;
 }
 
 export enum ViewMode {

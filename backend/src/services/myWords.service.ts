@@ -100,9 +100,17 @@ class MyWordsService {
    * @param userId - User ID
    * @param word - Word to add
    * @param notes - Optional notes
+   * @param tags - Optional tags array
+   * @param favorite - Mark as favorite
    * @returns Created saved word
    */
-  async addWord(userId: string, word: string, notes?: string): Promise<SavedWord> {
+  async addWord(
+    userId: string,
+    word: string,
+    notes?: string,
+    tags?: string[],
+    favorite: boolean = false
+  ): Promise<SavedWord> {
     try {
       const normalizedWord = word.toLowerCase().trim();
 
@@ -126,6 +134,8 @@ class MyWordsService {
           userId,
           word: normalizedWord,
           notes,
+          tags: tags || [],
+          favorite,
         },
       });
 
@@ -212,6 +222,190 @@ class MyWordsService {
       logger.error(`Error updating notes for word ${wordId}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Update word (notes, tags, favorite status)
+   * @param userId - User ID
+   * @param wordId - Saved word ID
+   * @param data - Update data
+   * @returns Updated saved word
+   */
+  async updateWord(
+    userId: string,
+    wordId: string,
+    data: { notes?: string; tags?: string[]; favorite?: boolean }
+  ): Promise<SavedWord> {
+    try {
+      // Check if word exists and belongs to user
+      const savedWord = await prisma.savedWord.findUnique({
+        where: { id: wordId },
+      });
+
+      if (!savedWord) {
+        throw new NotFoundError('Word not found');
+      }
+
+      if (savedWord.userId !== userId) {
+        throw new NotFoundError('Word not found in your dictionary');
+      }
+
+      // Update word
+      const updated = await prisma.savedWord.update({
+        where: { id: wordId },
+        data: {
+          ...(data.notes !== undefined && { notes: data.notes }),
+          ...(data.tags !== undefined && { tags: data.tags }),
+          ...(data.favorite !== undefined && { favorite: data.favorite }),
+        },
+      });
+
+      // Invalidate cache
+      await this.invalidateUserCache(userId);
+
+      logger.info(`Word updated: ${wordId}`);
+      return updated;
+    } catch (error) {
+      logger.error(`Error updating word ${wordId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Toggle favorite status
+   * @param userId - User ID
+   * @param wordId - Saved word ID
+   * @returns Updated saved word
+   */
+  async toggleFavorite(userId: string, wordId: string): Promise<SavedWord> {
+    try {
+      const savedWord = await prisma.savedWord.findUnique({
+        where: { id: wordId },
+      });
+
+      if (!savedWord) {
+        throw new NotFoundError('Word not found');
+      }
+
+      if (savedWord.userId !== userId) {
+        throw new NotFoundError('Word not found in your dictionary');
+      }
+
+      const updated = await prisma.savedWord.update({
+        where: { id: wordId },
+        data: { favorite: !savedWord.favorite },
+      });
+
+      await this.invalidateUserCache(userId);
+
+      logger.info(`Favorite toggled for word ${wordId}`);
+      return updated;
+    } catch (error) {
+      logger.error(`Error toggling favorite for word ${wordId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Export all user's words
+   * @param userId - User ID
+   * @param format - Export format ('json' or 'csv')
+   * @returns Exported data as string
+   */
+  async exportWords(userId: string, format: 'json' | 'csv' = 'json'): Promise<string> {
+    try {
+      const words = await prisma.savedWord.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (format === 'json') {
+        return JSON.stringify(words, null, 2);
+      } else {
+        // CSV format
+        const headers = ['word', 'notes', 'tags', 'favorite', 'createdAt', 'updatedAt'];
+        const csvRows = [headers.join(',')];
+
+        words.forEach((word) => {
+          const row = [
+            `"${word.word}"`,
+            `"${(word.notes || '').replace(/"/g, '""')}"`,
+            `"${word.tags.join(';')}"`,
+            word.favorite.toString(),
+            word.createdAt.toISOString(),
+            word.updatedAt.toISOString(),
+          ];
+          csvRows.push(row.join(','));
+        });
+
+        return csvRows.join('\n');
+      }
+    } catch (error) {
+      logger.error(`Error exporting words for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Import words from JSON array
+   * @param userId - User ID
+   * @param words - Array of words to import
+   * @returns Import statistics
+   */
+  async importWords(
+    userId: string,
+    words: Array<{ word: string; notes?: string; tags?: string[]; favorite?: boolean }>
+  ): Promise<{ imported: number; skipped: number; errors: string[] }> {
+    const stats = { imported: 0, skipped: 0, errors: [] as string[] };
+
+    for (const wordData of words) {
+      try {
+        const normalizedWord = wordData.word.toLowerCase().trim();
+
+        if (!normalizedWord) {
+          stats.errors.push('Empty word skipped');
+          stats.skipped++;
+          continue;
+        }
+
+        // Check if word already exists
+        const existing = await prisma.savedWord.findUnique({
+          where: {
+            userId_word: {
+              userId,
+              word: normalizedWord,
+            },
+          },
+        });
+
+        if (existing) {
+          stats.skipped++;
+          continue;
+        }
+
+        // Create word
+        await prisma.savedWord.create({
+          data: {
+            userId,
+            word: normalizedWord,
+            notes: wordData.notes,
+            tags: wordData.tags || [],
+            favorite: wordData.favorite || false,
+          },
+        });
+
+        stats.imported++;
+      } catch (error) {
+        stats.errors.push(`Failed to import "${wordData.word}": ${error}`);
+        stats.skipped++;
+      }
+    }
+
+    // Invalidate cache after import
+    await this.invalidateUserCache(userId);
+
+    logger.info(`Import completed for user ${userId}: ${stats.imported} imported, ${stats.skipped} skipped`);
+    return stats;
   }
 
   /**

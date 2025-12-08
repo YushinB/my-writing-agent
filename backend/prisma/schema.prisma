@@ -54,6 +54,8 @@ model SavedWord {
   userId    String
   word      String
   notes     String?
+  tags      String[] @default([])  // Array of tags for categorization
+  favorite  Boolean  @default(false) // Mark as favorite
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -63,6 +65,8 @@ model SavedWord {
   @@unique([userId, word])
   @@index([userId])
   @@index([word])
+  @@index([userId, favorite])
+  @@index([userId, tags])
   @@map("saved_words")
 }
 

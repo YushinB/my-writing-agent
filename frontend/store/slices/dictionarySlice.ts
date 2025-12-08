@@ -160,6 +160,28 @@ const dictionarySlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+
+    updateWordInStore: (state, action: PayloadAction<{ id: string; notes?: string; tags?: string[]; favorite?: boolean }>) => {
+      const word = state.words.find(w => w.id === action.payload.id);
+      if (word) {
+        if (action.payload.notes !== undefined) {
+          word.notes = action.payload.notes;
+        }
+        if (action.payload.tags !== undefined) {
+          word.tags = action.payload.tags;
+        }
+        if (action.payload.favorite !== undefined) {
+          word.favorite = action.payload.favorite;
+        }
+      }
+    },
+
+    toggleFavoriteInStore: (state, action: PayloadAction<{ id: string; favorite: boolean }>) => {
+      const word = state.words.find(w => w.id === action.payload.id);
+      if (word) {
+        word.favorite = action.payload.favorite;
+      }
+    },
   },
   extraReducers: (builder) => {
     // Fetch saved words
@@ -252,6 +274,8 @@ export const {
   addToRecentLookups,
   clearRecentLookups,
   clearError,
+  updateWordInStore,
+  toggleFavoriteInStore,
 } = dictionarySlice.actions;
 
 export default dictionarySlice.reducer;

@@ -17,6 +17,8 @@ export interface MyWord {
 export interface AddWordRequest {
   word: string;
   notes?: string;
+  tags?: string[];
+  favorite?: boolean;
 }
 
 export interface UpdateNotesRequest {
@@ -87,6 +89,41 @@ class MyWordsService {
   }
 
   /**
+   * Update word (notes, tags, favorite)
+   */
+  async updateWord(id: string, data: { notes?: string; tags?: string[]; favorite?: boolean }): Promise<MyWord> {
+    const response = await apiClient.put<ApiResponse<MyWord>>(`/my-words/${id}`, data);
+    return response.data.data;
+  }
+
+  /**
+   * Toggle favorite status
+   */
+  async toggleFavorite(id: string): Promise<MyWord> {
+    const response = await apiClient.post<ApiResponse<MyWord>>(`/my-words/${id}/favorite`);
+    return response.data.data;
+  }
+
+  /**
+   * Export all words
+   */
+  async exportWords(format: 'json' | 'csv' = 'json'): Promise<Blob> {
+    const response = await apiClient.get(`/my-words/export`, {
+      params: { format },
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+
+  /**
+   * Import words
+   */
+  async importWords(words: Array<{ word: string; notes?: string; tags?: string[]; favorite?: boolean }>): Promise<{ imported: number; skipped: number; errors: string[] }> {
+    const response = await apiClient.post<ApiResponse<{ imported: number; skipped: number; errors: string[] }>>('/my-words/import', { words });
+    return response.data.data;
+  }
+
+  /**
    * Convert MyWord to SavedWord for Redux store compatibility
    */
   toSavedWord(myWord: MyWord): SavedWord {
@@ -98,6 +135,7 @@ class MyWordsService {
       exampleSentence: myWord.exampleSentence || '',
       synonyms: myWord.synonyms || [],
       dateAdded: new Date(myWord.addedAt).getTime(),
+      notes: myWord.notes,
     };
   }
 
