@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes';
 import dictionaryRoutes from './dictionary.routes';
-import myWordsRoutes from './myWords.routes';
 import llmRoutes from './llm.routes';
 import settingsRoutes from './settings.routes';
 import healthRoutes from './health.routes';
@@ -16,7 +15,17 @@ const API_VERSION = '/v1';
 // Mount routes
 router.use(`${API_VERSION}/auth`, authRoutes);
 router.use(`${API_VERSION}/dictionary`, dictionaryRoutes);
-router.use(`${API_VERSION}/my-words`, myWordsRoutes);
+
+// Lazy-load myWords routes to avoid circular dependency
+router.use(`${API_VERSION}/my-words`, async (req, res, next) => {
+  try {
+    const { default: myWordsRoutes } = await import('./myWords.routes');
+    myWordsRoutes(req, res, next);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.use(`${API_VERSION}/llm`, llmRoutes);
 router.use(`${API_VERSION}/settings`, settingsRoutes);
 router.use(`${API_VERSION}/admin`, adminRoutes);

@@ -1,7 +1,16 @@
 import { Request, Response } from 'express';
-import { myWordsService } from '../services/myWords.service';
 import { createSuccessResponse, createPaginatedResponse } from '../utils/transform';
 import { asyncHandler } from '../middleware/errorHandler';
+
+// Lazy-load service to avoid module loading issues
+let serviceInstance: any = null;
+const getService = async () => {
+  if (!serviceInstance) {
+    const module = await import('../services/myWords.service');
+    serviceInstance = module.myWordsService;
+  }
+  return serviceInstance;
+};
 
 /**
  * Get user's saved words
@@ -12,7 +21,8 @@ export const getUserWords = asyncHandler(async (req: Request, res: Response) => 
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
 
-  const result = await myWordsService.getUserWords(userId, page, limit);
+  const service = await getService();
+  const result = await service.getUserWords(userId, page, limit);
 
   res.json(createPaginatedResponse(result.words, result.pagination.total, page, limit));
 });
@@ -25,7 +35,8 @@ export const addWord = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.userId!;
   const { word, notes, tags, favorite } = req.body;
 
-  const savedWord = await myWordsService.addWord(userId, word, notes, tags, favorite);
+  const service = await getService();
+  const savedWord = await service.addWord(userId, word, notes, tags, favorite);
   res.status(201).json(createSuccessResponse(savedWord, 'Word added'));
 });
 
@@ -37,7 +48,8 @@ export const removeWord = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.userId!;
   const { id } = req.params;
 
-  await myWordsService.removeWord(userId, id);
+  const service = await getService();
+  await service.removeWord(userId, id);
   res.json(createSuccessResponse(null, 'Word removed'));
 });
 
@@ -50,7 +62,8 @@ export const updateNotes = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { notes } = req.body;
 
-  const updated = await myWordsService.updateNotes(userId, id, notes);
+  const service = await getService();
+  const updated = await service.updateNotes(userId, id, notes);
   res.json(createSuccessResponse(updated, 'Notes updated'));
 });
 
@@ -64,7 +77,8 @@ export const searchWords = asyncHandler(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
 
-  const result = await myWordsService.searchWords(userId, query, page, limit);
+  const service = await getService();
+  const result = await service.searchWords(userId, query, page, limit);
 
   res.json(createPaginatedResponse(result.words, result.pagination.total, page, limit));
 });
@@ -75,7 +89,8 @@ export const searchWords = asyncHandler(async (req: Request, res: Response) => {
  */
 export const getWordCount = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.userId!;
-  const count = await myWordsService.getWordCount(userId);
+  const service = await getService();
+  const count = await service.getWordCount(userId);
   res.json(createSuccessResponse({ count }));
 });
 
@@ -88,7 +103,8 @@ export const updateWord = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { notes, tags, favorite } = req.body;
 
-  const updated = await myWordsService.updateWord(userId, id, { notes, tags, favorite });
+  const service = await getService();
+  const updated = await service.updateWord(userId, id, { notes, tags, favorite });
   res.json(createSuccessResponse(updated, 'Word updated'));
 });
 
@@ -100,7 +116,8 @@ export const toggleFavorite = asyncHandler(async (req: Request, res: Response) =
   const userId = req.userId!;
   const { id } = req.params;
 
-  const updated = await myWordsService.toggleFavorite(userId, id);
+  const service = await getService();
+  const updated = await service.toggleFavorite(userId, id);
   res.json(createSuccessResponse(updated, 'Favorite status toggled'));
 });
 
@@ -112,7 +129,8 @@ export const exportWords = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.userId!;
   const format = (req.query.format as 'json' | 'csv') || 'json';
 
-  const exportedData = await myWordsService.exportWords(userId, format);
+  const service = await getService();
+  const exportedData = await service.exportWords(userId, format);
 
   // Set appropriate headers
   const filename = `my-words-${new Date().toISOString().split('T')[0]}.${format}`;
@@ -127,7 +145,7 @@ export const exportWords = asyncHandler(async (req: Request, res: Response) => {
  * Import words
  * POST /api/my-words/import
  */
-export const importWords = asyncHandler(async (req: Request, res: Response) => {
+export const importWords = asyncHandler(async (req: Request, res: Response): Promise<any> => {
   const userId = req.userId!;
   const { words } = req.body;
 
@@ -135,6 +153,7 @@ export const importWords = asyncHandler(async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Words must be an array' });
   }
 
-  const stats = await myWordsService.importWords(userId, words);
-  res.json(createSuccessResponse(stats, 'Import completed'));
+  const service = await getService();
+  const stats = await service.importWords(userId, words);
+  return res.json(createSuccessResponse(stats, 'Import completed'));
 });

@@ -7,7 +7,8 @@
       "Bash(npm run test:coverage:*)",
       "Bash(docker-compose:*)",
       "Bash(docker exec:*)",
-      "Bash(npm run db:seed:*)"
+      "Bash(npm run db:seed:*)",
+      "Bash(gh issue view:*)"
     ],
     "deny": [],
     "ask": []
