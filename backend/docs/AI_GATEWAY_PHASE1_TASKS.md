@@ -220,19 +220,19 @@
 #### 8.1 Create Usage Tracker
 **File:** `src/services/aiGateway/core/UsageTracker.ts`
 
-- [ ] Create `recordUsage()` method
-- [ ] Save usage data to `AIUsage` table
-- [ ] Calculate and store costs
-- [ ] Track token usage
-- [ ] Add error handling
+- [x] Create `recordUsage()` method
+- [x] Save usage data to `AIUsage` table
+- [x] Calculate and store costs
+- [x] Track token usage
+- [x] Add error handling
 
 **Estimated Time:** 1.5 hours
 
 #### 8.2 Integrate Usage Tracking
-- [ ] Add usage tracking to `AIGatewayService.generate()`
-- [ ] Track successful requests
-- [ ] Track failed requests
-- [ ] Store latency metrics
+- [x] Add usage tracking to `AIGatewayService.generate()`
+- [x] Track successful requests
+- [x] Track failed requests
+- [x] Store latency metrics
 
 **Estimated Time:** 45 minutes
 

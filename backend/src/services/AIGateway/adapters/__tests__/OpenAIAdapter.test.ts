@@ -9,7 +9,7 @@ jest.mock('openai');
 describe('OpenAIAdapter', () => {
   let adapter: OpenAIAdapter;
   let mockClient: jest.Mocked<OpenAI>;
-  const mockApiKey = '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';
+  const mockApiKey = 'yourkey';
   const mockModelId = 'gpt-3.5-turbo';
 
   beforeEach(() => {

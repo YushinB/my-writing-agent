@@ -6,6 +6,7 @@ import type {
   HealthStatus,
   RoutingPolicy,
 } from '../types';
+import { usageTracker } from './UsageTracker';
 
 /**
  * AIGatewayService
@@ -134,6 +135,13 @@ export class AIGatewayService {
       // Calculate actual latency
       const latency = Date.now() - startTime;
 
+      // Track successful usage (non-blocking)
+      if (userId) {
+        usageTracker.recordSuccess(userId, request, result, latency).catch((err) => {
+          this.log('warn', 'Usage tracking failed (non-blocking)', { error: err.message });
+        });
+      }
+
       // Format and return the response
       const response = this.formatSuccessResponse(result, latency);
 
@@ -149,6 +157,21 @@ export class AIGatewayService {
 
     } catch (error) {
       const latency = Date.now() - startTime;
+
+      // Track failed usage (non-blocking)
+      if (userId && adapter) {
+        const errorCode = this.getErrorCode(error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+
+        usageTracker
+          .recordFailure(userId, request, adapter.providerName, adapter.modelId, {
+            code: errorCode,
+            message: errorMessage,
+          }, latency)
+          .catch((err) => {
+            this.log('warn', 'Failed usage tracking failed (non-blocking)', { error: err.message });
+          });
+      }
 
       this.log('error', `Generation failed`, {
         error: error instanceof Error ? error.message : String(error),
@@ -339,6 +362,21 @@ export class AIGatewayService {
     }
 
     return new Error(`AI Gateway error: ${String(error)}`);
+  }
+
+  /**
+   * Get error code from error object
+   */
+  private getErrorCode(error: unknown): string {
+    if (error instanceof Error) {
+      // Check for common error patterns
+      if (error.message.includes('timeout')) return 'TIMEOUT';
+      if (error.message.includes('quota')) return 'QUOTA_EXCEEDED';
+      if (error.message.includes('unauthorized') || error.message.includes('401')) return 'UNAUTHORIZED';
+      if (error.message.includes('rate limit') || error.message.includes('429')) return 'RATE_LIMIT';
+      if (error.message.includes('no suitable adapter')) return 'NO_ADAPTER';
+    }
+    return 'UNKNOWN_ERROR';
   }
 
   /**

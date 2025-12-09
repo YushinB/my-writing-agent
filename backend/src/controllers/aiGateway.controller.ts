@@ -27,10 +27,8 @@ export const generate = asyncHandler(async (req: Request, res: Response) => {
 
   try {
     // Generate text using AI Gateway
+    // (Usage tracking is handled automatically by AIGatewayService)
     const response = await aiGateway.generate(generateRequest, userId);
-
-    // Track usage in database
-    await trackUsage(userId, generateRequest, response, Date.now() - startTime);
 
     // Update user quota
     await updateQuota(userId, response.data.costEstimate.amount);
@@ -298,60 +296,10 @@ export const getUsage = asyncHandler(async (req: Request, res: Response) => {
 // ========================================
 
 /**
- * Track usage in the database
- */
-async function trackUsage(
-  userId: string,
-  request: GenerateRequest,
-  response: any,
-  latency: number
-): Promise<void> {
-  try {
-    // Find provider ID
-    const provider = await prisma.aIProvider.findUnique({
-      where: { name: response.data.provider },
-    });
-
-    if (!provider) {
-      logger.warn('Provider not found in database', { provider: response.data.provider });
-      return;
-    }
-
-    // Create usage record
-    await prisma.aIUsage.create({
-      data: {
-        userId,
-        providerId: provider.id,
-        model: response.data.model,
-        operation: 'generate',
-        prompt: request.prompt?.substring(0, 1000), // Store first 1000 chars only
-        promptTokens: response.data.usage.promptTokens,
-        completionTokens: response.data.usage.completionTokens,
-        totalTokens: response.data.usage.totalTokens,
-        latency,
-        cached: response.data.cached,
-        successful: true,
-        estimatedCost: response.data.costEstimate.amount,
-        requestId: `req_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-        metadata: {
-          temperature: request.options?.temperature,
-          maxTokens: request.options?.maxTokens,
-        },
-      },
-    });
-
-    logger.debug('Usage tracked successfully', { userId, model: response.data.model });
-  } catch (error) {
-    // Don't fail the request if usage tracking fails
-    logger.error('Failed to track usage', {
-      userId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-}
-
-/**
  * Update user quota after successful generation
+ *
+ * Note: Usage tracking is handled automatically by AIGatewayService.
+ * This function only updates the quota counters.
  */
 async function updateQuota(userId: string, cost: number): Promise<void> {
   try {
