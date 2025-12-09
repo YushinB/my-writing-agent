@@ -103,6 +103,9 @@ App.tsx (Root)
 **Authentication Logic**:
 ```typescript
 // Admin detection: email contains 'admin'
+// NOTE: This is a mock authentication system for demonstration purposes only.
+// In production, implement proper role-based access control with server-side 
+// validation and secure authentication (OAuth, JWT, etc.).
 role: email.includes('admin') ? 'admin' : 'user'
 ```
 
@@ -658,7 +661,13 @@ App.tsx
 **Live Mode Typing**:
 ```typescript
 // 2-second debounce to reduce API calls
-setTimeout(() => getLiveSuggestion(text), 2000)
+// Clear previous timeout to prevent multiple concurrent calls
+if (typingTimeoutRef.current) {
+  clearTimeout(typingTimeoutRef.current);
+}
+typingTimeoutRef.current = setTimeout(() => {
+  getLiveSuggestion(text, settings.aiModel);
+}, 2000);
 ```
 
 **Benefits**:
@@ -696,14 +705,15 @@ setTimeout(() => getLiveSuggestion(text), 2000)
 
 **Current Implementation**:
 - API key stored in environment variable
-- Not exposed to client-side code directly
+- ⚠️ **SECURITY WARNING**: In the current Vite build process, environment variables are bundled into the client-side JavaScript and are visible to end users who inspect the code. This is NOT secure for production use.
 - Requires build-time configuration
 
-**Recommendations for Production**:
-- Use backend proxy for API calls
-- Implement rate limiting
-- Add request authentication
-- Monitor API usage
+**Critical Recommendations for Production**:
+- **MUST**: Use backend proxy for API calls (never expose API keys to client)
+- Implement rate limiting (per user/IP)
+- Add proper request authentication (OAuth, JWT)
+- Monitor API usage and set spending limits
+- Store API keys securely on server-side only
 
 ### 12.2 Data Privacy
 
@@ -869,9 +879,9 @@ API_KEY=your_gemini_api_key_here
 ### 15.3 Scalability Considerations
 
 **Current Limitations**:
-- Client-side storage (localStorage limits ~5-10MB)
-- Single API key (all users share rate limits)
-- No user data backup
+- Client-side storage (localStorage limit ~5-10MB per domain/origin, shared across all applications on that domain)
+- Single API key (all users share rate limits and costs)
+- No user data backup or sync
 - Limited offline functionality
 
 **Scaling Solutions**:
