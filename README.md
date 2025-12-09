@@ -74,5 +74,10 @@ Follow these steps to set up and run the project locally.
 │   └── index.tsx         # Entry point
 ├── .env.local            # Environment variables (untracked)
 ├── package.json
+├── DESIGN.md             # Detailed design documentation
 └── README.md
 ```
+
+## Documentation
+
+For detailed technical documentation, architecture overview, and design decisions, see [DESIGN.md](DESIGN.md).
