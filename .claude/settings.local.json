@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(npm run test:settings:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:coverage:*)",
+      "Bash(docker-compose:*)",
+      "Bash(docker exec:*)",
+      "Bash(npm run db:seed:*)",
+      "Bash(gh issue view:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

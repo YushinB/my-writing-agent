@@ -1,0 +1,788 @@
+# Backend Development Task List
+
+## Project Setup Phase
+
+### 1. Project Initialization ⏱️ 1-2 hours
+
+- [x] **1.1** Create `backend/` directory structure
+  - [x] Create all folders from FOLDER_STRUCTURE.md
+  - [x] Set up src/ directory with subdirectories
+
+- [x] **1.2** Initialize Node.js project
+  ```bash
+  cd backend
+  npm init -y
+  ```
+
+- [x] **1.3** Install dependencies
+  ```bash
+  # Core dependencies
+  npm install express cors dotenv
+  npm install @prisma/client ioredis axios
+  npm install @google/generative-ai
+  npm install bcrypt jsonwebtoken
+  npm install zod
+  npm install express-rate-limit rate-limit-redis
+  npm install node-cron
+  npm install winston morgan
+
+  # Dev dependencies
+  npm install -D typescript @types/node @types/express
+  npm install -D @types/bcrypt @types/jsonwebtoken
+  npm install -D @types/cors @types/morgan
+  npm install -D @types/node-cron
+  npm install -D prisma
+  npm install -D nodemon ts-node
+  npm install -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin
+  npm install -D prettier eslint-config-prettier
+  npm install -D jest @types/jest ts-jest supertest @types/supertest
+  ```
+
+- [x] **1.4** Create configuration files
+  - [x] Create `tsconfig.json`
+  - [x] Create `.eslintrc.js`
+  - [x] Create `.prettierrc`
+  - [x] Create `jest.config.js`
+  - [x] Create `.env.example`
+  - [x] Create `.env` (copy from .env.example)
+  - [x] Create `.gitignore`
+
+- [x] **1.5** Update `package.json` scripts
+  - [x] Add dev, build, start scripts
+  - [x] Add test scripts
+  - [x] Add linting scripts
+  - [x] Add Prisma scripts
+
+---
+
+## Database Setup Phase
+
+### 2. Prisma & PostgreSQL Setup ⏱️ 2-3 hours
+
+- [x] **2.1** Set up Docker services
+  - [x] Create `docker-compose.yml`
+  - [x] Start PostgreSQL container
+    ```bash
+    docker-compose up -d postgres
+    ```
+  - [x] Verify PostgreSQL is running
+    ```bash
+    docker ps
+    ```
+
+- [x] **2.2** Initialize Prisma
+  ```bash
+  npx prisma init
+  ```
+
+- [x] **2.3** Create Prisma schema
+  - [x] Define User model
+  - [x] Define SavedWord model
+  - [x] Define DictionaryEntry model
+  - [x] Define UserSettings model
+  - [x] Define AIUsageLog model
+  - [x] Add enums (UserRole)
+  - [x] Add indexes
+
+- [x] **2.4** Run first migration
+  ```bash
+  npx prisma migrate dev --name init
+  ```
+
+- [x] **2.5** Generate Prisma Client
+  ```bash
+  npx prisma generate
+  ```
+
+- [x] **2.6** Create database configuration
+  - [x] Create `src/config/database.ts`
+  - [x] Set up Prisma client singleton
+  - [x] Add connection error handling
+
+---
+
+## Redis Setup Phase
+
+### 3. Redis Configuration ⏱️ 1 hour
+
+- [x] **3.1** Start Redis container
+  ```bash
+  docker-compose up -d redis
+  ```
+
+- [x] **3.2** Create Redis configuration
+  - [x] Create `src/config/redis.ts`
+  - [x] Set up ioredis client
+  - [x] Configure retry strategy
+  - [x] Add event listeners (connect, error)
+  - [x] Implement lazy connect
+
+- [x] **3.3** Test Redis connection
+  - [x] Create test script to ping Redis
+  - [x] Verify read/write operations
+
+---
+
+## Core Configuration Phase
+
+### 4. Environment & Configuration ⏱️ 1-2 hours
+
+- [x] **4.1** Create environment validation
+  - [x] Create `src/config/env.ts`
+  - [x] Define Zod schema for env variables
+  - [x] Validate on startup
+  - [X] Export type-safe env object
+
+- [x] **4.2** Create Gemini AI configuration
+  - [x] Create `src/config/gemini.ts`
+  - [x] Initialize GoogleGenerativeAI client
+  - [x] Configure model (gemini-2.5-flash)
+
+- [x] **4.3** Create logger configuration
+  - [x] Create `src/utils/logger.ts`
+  - [x] Set up Winston logger
+  - [x] Configure file transports (error.log, combined.log)
+  - [x] Configure console transport for development
+  - [x] Add log levels
+
+---
+
+## Utilities & Types Phase
+
+### 5. Type Definitions ⏱️ 2 hours
+
+- [x] **5.1** Create type files
+  - [x] Create `src/types/express.d.ts` (extend Express Request)
+  - [x] Create `src/types/auth.types.ts`
+  - [x] Create `src/types/dictionary.types.ts`
+  - [x] Create `src/types/llm.types.ts`
+  - [x] Create `src/types/api.types.ts`
+
+- [x] **5.2** Define response interfaces
+  - [x] ApiResponse<T>
+  - [x] ApiError
+  - [x] PaginationMeta
+
+---
+
+### 6. Utility Functions ⏱️ 2-3 hours
+
+- [x] **6.1** Create error utilities
+  - [x] Create `src/utils/errors.ts`
+  - [x] Define custom error classes (NotFoundError, ValidationError, etc.)
+  - [x] Define error codes enum
+
+- [x] **6.2** Create validation utilities
+  - [x] Create `src/utils/validation.ts`
+  - [x] Define Zod schemas for common validations
+  - [x] Email validation
+  - [x] Password validation
+  - [x] UUID validation
+
+- [x] **6.3** Create hash utilities
+  - [x] Create `src/utils/hash.ts`
+  - [x] Implement bcrypt hashing
+  - [x] Implement password comparison
+
+- [x] **6.4** Create JWT utilities
+  - [x] Create `src/utils/jwt.ts`
+  - [x] Generate access token function
+  - [x] Generate refresh token function
+  - [x] Verify token function
+  - [x] Decode token function
+
+- [x] **6.5** Create transformation utilities
+  - [x] Create `src/utils/transform.ts`
+  - [x] Transform Free Dictionary API response
+  - [x] Transform database models to API responses
+
+---
+
+## Middleware Phase
+
+### 7. Middleware Implementation ⏱️ 3-4 hours
+
+- [x] **7.1** Create authentication middleware
+  - [x] Create `src/middleware/auth.ts`
+  - [x] Extract token from Authorization header
+  - [x] Verify JWT token
+  - [x] Attach user to request object
+  - [x] Handle token expiration errors
+
+- [x] **7.2** Create authorization middleware
+  - [x] Add `requireAdmin` middleware
+  - [x] Check user role
+
+- [x] **7.3** Create validation middleware
+  - [x] Create `src/middleware/validation.ts`
+  - [x] Generic Zod validation middleware
+  - [x] Validate body, query, params
+
+- [x] **7.4** Create error handler middleware
+  - [x] Create `src/middleware/errorHandler.ts`
+  - [x] Convert errors to ApiError format
+  - [x] Log errors
+  - [x] Send appropriate HTTP status codes
+
+- [x] **7.5** Create rate limiting middleware
+  - [x] Create `src/middleware/rateLimiter.ts`
+  - [x] Configure Redis store
+  - [x] Create general limiter
+  - [x] Create auth limiter
+  - [x] Create LLM limiter
+  - [x] Create custom per-user rate limiter
+
+- [x] **7.6** Create CORS middleware
+  - [x] Create `src/middleware/cors.ts`
+  - [x] Configure allowed origins from env
+  - [x] Enable credentials
+
+---
+
+## Services Layer Phase
+
+### 8. Cache Service ⏱️ 2-3 hours
+
+- [x] **8.1** Create cache service
+  - [x] Create `src/services/cache.service.ts`
+  - [x] Implement get/set/delete methods
+  - [x] Implement setex (with TTL)
+  - [x] Implement cache key generators
+  - [x] Handle JSON serialization
+  - [x] Add error handling with fallbacks
+
+---
+
+### 9. Session Service ⏱️ 2 hours
+
+- [x] **9.1** Create session service
+  - [x] Create `src/services/session.service.ts`
+  - [x] Implement createSession (Redis)
+  - [x] Implement getSession
+  - [x] Implement deleteSession
+  - [x] Track user's active sessions (Redis Set)
+  - [x] Implement logout all sessions
+
+---
+
+### 10. User & Auth Service ⏱️ 4-5 hours
+
+- [x] **10.1** Create user service
+  - [x] Create `src/services/user.service.ts`
+  - [x] Implement createUser
+  - [x] Implement getUserById
+  - [x] Implement getUserByEmail
+  - [x] Implement updateUser
+  - [x] Add Redis caching for user data
+
+- [x] **10.2** Create auth service
+  - [x] Create `src/services/auth.service.ts`
+  - [x] Implement register
+    - Validate email uniqueness
+    - Hash password
+    - Create user in database
+    - Generate tokens
+    - Create session
+  - [x] Implement login
+    - Validate credentials
+    - Compare password hash
+    - Generate tokens
+    - Create session
+  - [x] Implement refresh token
+    - Validate refresh token from Redis
+    - Generate new token pair
+    - Update session
+  - [x] Implement logout
+    - Delete session from Redis
+  - [x] Implement getCurrentUser
+
+---
+
+### 11. Dictionary Service ⏱️ 6-8 hours
+
+- [x] **11.1** Create Free Dictionary API service
+  - [x] Create `src/services/freeDictionary.service.ts`
+  - [x] Implement fetchWordDefinition
+  - [x] Add axios retry logic
+  - [x] Transform API response to our schema
+  - [x] Handle 404 errors
+  - [x] Add request delay (respectful rate limiting)
+
+- [x] **11.2** Create dictionary service
+  - [x] Create `src/services/dictionary.service.ts`
+  - [x] Implement multi-layer caching lookup:
+    - Layer 1: Check Redis cache
+    - Layer 2: Check PostgreSQL cache
+    - Layer 3: Query Free Dictionary API
+    - Layer 4: Fallback to Gemini AI
+  - [x] Implement searchDictionary
+  - [x] Implement addWordToDictionary (admin)
+  - [x] Implement refreshCacheEntry (admin)
+  - [x] Add cache invalidation
+
+---
+
+### 12. My Words Service ⏱️ 3-4 hours
+
+- [x] **12.1** Create my words service
+  - [x] Create `src/services/myWords.service.ts`
+  - [x] Implement getUserWords (paginated)
+  - [x] Implement addWordToUserDictionary
+  - [x] Implement removeWordFromUserDictionary
+  - [x] Implement searchUserWords
+  - [x] Check for duplicate words
+  - [x] Add Redis caching for frequently accessed words
+
+---
+
+### 13. LLM Service ⏱️ 6-8 hours
+
+- [x] **13.1** Create LLM service
+  - [x] Create `src/services/llm.service.ts`
+  - [x] Implement correctText
+    - Generate cache key (hash of input)
+    - Check Redis cache
+    - Call Gemini API if cache miss
+    - Parse AI response
+    - Cache result
+    - Track usage in AIUsageLog
+  - [x] Implement defineWord
+    - Use Gemini for obscure words
+    - Return structured definition
+  - [x] Implement generateSuggestions
+  - [x] Implement analyzeWritingStyle
+  - [x] Create prompt templates for each function
+  - [x] Add error handling for API failures
+  - [x] Implement retry logic
+
+---
+
+### 14. Settings Service ⏱️ 2 hours
+
+- [x] **14.1** Create settings service
+  - [x] Create `src/services/settings.service.ts`
+  - [x] Implement getUserSettings
+  - [x] Implement updateUserSettings
+  - [x] Auto-create settings on user registration
+  - [x] Add Redis caching
+
+---
+
+## Controllers Layer Phase
+
+### 15. Controllers Implementation ⏱️ 6-8 hours
+
+- [x] **15.1** Create auth controller
+  - [x] Create `src/controllers/auth.controller.ts`
+  - [x] Implement register handler
+  - [x] Implement login handler
+  - [x] Implement refresh handler
+  - [x] Implement logout handler
+  - [x] Implement getCurrentUser handler
+
+- [x] **15.2** Create dictionary controller
+  - [x] Create `src/controllers/dictionary.controller.ts`
+  - [x] Implement searchDictionary handler
+  - [x] Implement getWordDefinition handler
+  - [x] Implement getFullWordData handler
+  - [x] Implement addWord handler (admin)
+
+- [x] **15.3** Create my words controller
+  - [x] Create `src/controllers/myWords.controller.ts`
+  - [x] Implement getUserWords handler
+  - [x] Implement addWord handler
+  - [x] Implement removeWord handler
+  - [x] Implement searchWords handler
+
+- [x] **15.4** Create LLM controller
+  - [x] Create `src/controllers/llm.controller.ts`
+  - [x] Implement correctText handler
+  - [x] Implement defineWord handler
+  - [x] Implement generateSuggestions handler
+  - [x] Implement analyzeWritingStyle handler
+
+- [x] **15.5** Create settings controller
+  - [x] Create `src/controllers/settings.controller.ts`
+  - [x] Implement getSettings handler
+  - [x] Implement updateSettings handler
+
+- [x] **15.6** Create health controller
+  - [x] Create `src/controllers/health.controller.ts`
+  - [x] Check database connection
+  - [x] Check Redis connection
+  - [x] Check external APIs (Free Dictionary, Gemini)
+  - [x] Return cache metrics
+  - [x] Return performance metrics
+
+---
+
+## Routes Layer Phase
+
+### 16. Routes Implementation ⏱️ 3-4 hours
+
+- [x] **16.1** Create auth routes
+  - [x] Create `src/routes/auth.routes.ts`
+  - [x] POST /auth/register
+  - [x] POST /auth/login
+  - [x] POST /auth/refresh
+  - [x] POST /auth/logout (protected)
+  - [x] GET /auth/me (protected)
+
+- [x] **16.2** Create dictionary routes
+  - [x] Create `src/routes/dictionary.routes.ts`
+  - [x] GET /dictionary/search (protected)
+  - [x] GET /dictionary/word/:word (protected)
+  - [x] GET /dictionary/word/:word/full (protected)
+  - [x] POST /dictionary/words (admin)
+
+- [x] **16.3** Create my words routes
+  - [x] Create `src/routes/myWords.routes.ts`
+  - [x] GET /my-words (protected)
+  - [x] POST /my-words (protected)
+  - [x] DELETE /my-words/:id (protected)
+  - [x] GET /my-words/search (protected)
+
+- [x] **16.4** Create LLM routes
+  - [x] Create `src/routes/llm.routes.ts`
+  - [x] POST /llm/correct (protected, rate-limited)
+  - [x] POST /llm/define (protected, rate-limited)
+  - [x] POST /llm/suggest (protected, rate-limited)
+  - [x] POST /llm/analyze (protected, rate-limited)
+
+- [x] **16.5** Create settings routes
+  - [x] Create `src/routes/settings.routes.ts`
+  - [x] GET /settings (protected)
+  - [x] PATCH /settings (protected)
+
+- [x] **16.6** Create health routes
+  - [x] Create `src/routes/health.routes.ts`
+  - [x] GET /health (public)
+
+- [x] **16.7** Create main router
+  - [x] Create `src/routes/index.ts`
+  - [x] Combine all sub-routers
+  - [x] Add /api prefix
+  - [x] Add versioning support
+
+---
+
+## Application Setup Phase
+
+### 17. Express App Setup ⏱️ 2-3 hours
+
+- [x] **17.1** Create Express app
+  - [x] Create `src/app.ts`
+  - [x] Initialize Express
+  - [x] Add body parser middleware
+  - [x] Add CORS middleware
+  - [x] Add Morgan logging middleware
+  - [x] Add rate limiting middleware
+  - [x] Register routes
+  - [x] Add 404 handler
+  - [x] Add error handler middleware
+  - [x] Export app
+
+- [x] **17.2** Create server entry point
+  - [x] Create `src/server.ts`
+  - [x] Import app
+  - [x] Connect to database
+  - [x] Connect to Redis
+  - [x] Start HTTP server
+  - [x] Add graceful shutdown
+  - [x] Handle SIGTERM/SIGINT
+
+---
+
+## Background Jobs Phase
+
+### 18. Cron Jobs ⏱️ 2-3 hours
+
+- [x] **18.1** Create cache cleanup job
+  - [x] Create `src/jobs/cacheCleanup.ts`
+  - [x] Delete expired PostgreSQL cache entries
+  - [x] Log cleanup results
+
+- [x] **18.2** Create job scheduler
+  - [x] Create `src/jobs/scheduler.ts`
+  - [x] Schedule cache cleanup (daily at 2 AM)
+  - [x] Add job monitoring/logging
+  - [x] Export job starter function
+
+- [x] **18.3** Integrate jobs with server
+  - [x] Start jobs on server startup
+
+---
+
+## Testing Phase
+
+### 19. Unit Tests ⏱️ 8-10 hours
+
+- [x] **19.1** Set up test environment
+  - [x] Create `tests/setup.ts`
+  - [x] Create test database configuration
+  - [x] Create test helpers
+
+- [x] **19.2** Test utilities
+  - [x] Test hash functions
+  - [x] Test JWT functions
+  - [x] Test validation schemas
+  - [x] Test transformation functions
+
+- [x] **19.3** Test services
+  - [x] Test auth service
+  - [x] Test dictionary service
+  - [x] Test LLM service
+  - [x] Test cache service
+  - [x] Test session service
+
+- [x] **19.4** Test middleware
+  - [x] Test auth middleware
+  - [x] Test validation middleware
+  - [x] Test error handler
+
+---
+
+### 20. Integration Tests ⏱️ 6-8 hours
+
+- [x] **20.1** Test auth endpoints
+  - [x] Create `tests/integration/auth.test.ts`
+  - [x] Test registration flow
+  - [x] Test login flow
+  - [x] Test token refresh
+  - [x] Test logout
+  - [x] Test protected endpoints
+
+- [x] **20.2** Test dictionary endpoints
+  - [x] Create `tests/integration/dictionary.test.ts`
+  - [x] Test search
+  - [x] Test word lookup
+  - [x] Test caching behavior
+  - [x] Test admin operations
+
+- [x] **20.3** Test my words endpoints
+  - [x] Create `tests/integration/myWords.test.ts`
+  - [x] Test CRUD operations
+  - [x] Test pagination
+  - [x] Test search
+
+- [x] **20.4** Test LLM endpoints
+  - [x] Create `tests/integration/llm.test.ts`
+  - [x] Test correction endpoint
+  - [x] Test caching
+  - [x] Test rate limiting
+
+---
+
+## Database Seeding Phase
+
+### 21. Database Seeding ⏱️ 2-3 hours
+
+- [x] **21.1** Create seed script
+  - [x] Create `prisma/seed.ts`
+  - [x] Create admin user
+  - [x] Create test users
+  - [x] Seed common dictionary words (top 1000 English words)
+  - [x] Create sample user settings
+
+- [x] **21.2** Add seed script to package.json
+  ```json
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  }
+  ```
+
+- [x] **21.3** Run seed
+  ```bash
+  npm run db:seed
+  ```
+
+---
+
+## Documentation Phase
+
+### 22. Documentation ⏱️ 3-4 hours
+
+- [x] **22.1** Create README.md
+  - [x] Project overview
+  - [x] Prerequisites
+  - [x] Installation steps
+  - [x] Running locally
+  - [x] Running with Docker
+  - [x] Testing
+  - [x] Environment variables
+  - [x] API documentation link
+
+- [x] **22.2** Create API documentation
+  - [x] Consider using Swagger/OpenAPI
+  - [x] Or create detailed API.md
+  - [x] Document all endpoints
+  - [x] Include example requests/responses
+
+- [x] **22.3** Add inline code documentation
+  - [x] Add JSDoc comments to services
+  - [x] Add JSDoc comments to utilities
+  - [x] Document complex logic
+
+---
+
+## Production Preparation Phase
+
+### 23. Production Setup ⏱️ 4-5 hours
+
+- [x] **23.1** Create Dockerfile
+  - [x] Multi-stage build
+  - [x] Production dependencies only
+  - [x] Optimize image size
+
+- [x] **23.2** Update docker-compose for production
+  - [x] Production environment variables
+  - [x] Resource limits
+  - [x] Health checks
+  - [x] Restart policies
+
+- [x] **23.3** Security hardening
+  - [x] Helmet.js for security headers
+  - [x] Rate limiting production values
+  - [x] Environment variable validation
+  - [x] HTTPS enforcement
+  - [x] SQL injection prevention check (Prisma handles this)
+  - [x] XSS prevention check (CSP headers)
+
+- [x] **23.4** Performance optimization
+  - [x] Database connection pooling
+  - [x] Redis connection pooling
+  - [x] Compression middleware
+  - [x] Response caching headers
+
+- [x] **23.5** Monitoring setup
+  - [x] Add health check endpoint (already existed)
+  - [x] Add metrics endpoint
+  - [x] Configure Winston for production logging
+  - [x] Set up log rotation
+
+---
+
+## Deployment Phase
+
+### 24. Deployment ⏱️ 2-3 hours
+
+- [ ] **24.1** Choose hosting platform
+  - [ ] Railway / Render / Heroku
+  - [ ] Or VPS (DigitalOcean, AWS, etc.)
+
+- [ ] **24.2** Set up PostgreSQL
+  - [ ] Managed PostgreSQL service
+  - [ ] Or self-hosted
+
+- [ ] **24.3** Set up Redis
+  - [ ] Managed Redis service (Upstash, Redis Cloud)
+  - [ ] Or self-hosted
+
+- [ ] **24.4** Deploy backend
+  - [ ] Push to GitHub
+  - [ ] Connect to hosting platform
+  - [ ] Set environment variables
+  - [ ] Run database migrations
+  - [ ] Verify deployment
+
+- [ ] **24.5** Post-deployment
+  - [ ] Test all endpoints
+  - [ ] Monitor logs
+  - [ ] Check performance metrics
+  - [ ] Test error scenarios
+
+---
+
+## Total Estimated Time
+
+| Phase | Hours |
+|-------|-------|
+| Project Setup | 2 |
+| Database Setup | 3 |
+| Redis Setup | 1 |
+| Configuration | 2 |
+| Types & Utilities | 7 |
+| Middleware | 4 |
+| Services | 25 |
+| Controllers | 8 |
+| Routes | 4 |
+| App Setup | 3 |
+| Background Jobs | 3 |
+| Testing | 18 |
+| Database Seeding | 3 |
+| Documentation | 4 |
+| Production Prep | 5 |
+| Deployment | 3 |
+| **Total** | **~95 hours** |
+
+**Estimated Timeline:** 2-3 weeks for one developer
+
+---
+
+## Priority Levels
+
+### Phase 1 - MVP (Must Have) ⭐⭐⭐
+1. Project Setup
+2. Database Setup
+3. Redis Setup
+4. Core Configuration
+5. Types & Utilities
+6. Authentication (Middleware, Service, Controller, Routes)
+7. Dictionary Service (basic lookup)
+8. App Setup
+
+### Phase 2 - Core Features ⭐⭐
+9. LLM Service (correction endpoint)
+10. My Words Service
+11. Settings Service
+12. Health Check
+13. Basic Testing
+14. Documentation
+
+### Phase 3 - Enhancements ⭐
+15. Background Jobs
+16. Comprehensive Testing
+17. Production Preparation
+18. Deployment
+19. Advanced LLM features
+20. Admin features
+
+---
+
+## Daily Development Plan (Example)
+
+### Week 1
+- **Day 1-2:** Project setup, database, Redis, configuration
+- **Day 3-4:** Types, utilities, middleware
+- **Day 5:** Authentication service + routes
+
+### Week 2
+- **Day 1-2:** Dictionary service with multi-layer caching
+- **Day 3:** My Words service
+- **Day 4:** LLM service (basic)
+- **Day 5:** Settings service + health check
+
+### Week 3
+- **Day 1-2:** Testing (unit + integration)
+- **Day 3:** Background jobs + documentation
+- **Day 4:** Production preparation
+- **Day 5:** Deployment + final testing
+
+---
+
+## Quick Start Checklist
+
+For a quick MVP in 1 week:
+
+- [x] Set up project + database + Redis (Day 1)
+- [x] Create utilities + middleware (Day 1-2)
+- [x] Implement auth (Day 2)
+- [x] Implement dictionary service (Day 3)
+- [x] Implement LLM correction (Day 4)
+- [x] Add basic tests (Day 5)
+- [ ] Deploy (Day 5)
+
+---
+
+**Last Updated:** 2024-12-06
+**Version:** 2.1

@@ -1,0 +1,161 @@
+// Prisma Schema for ProsePolish Backend
+// Database: PostgreSQL
+// ORM: Prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// User Model
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      UserRole @default(USER)
+  suspended Boolean  @default(false)
+  suspendedAt DateTime?
+  suspendedBy String?
+
+  // Profile fields
+  displayName String?
+  avatar      String?  // URL or path to avatar image
+  hobbies     String?  // Stored as comma-separated or JSON string
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  savedWords SavedWord[]
+  settings   UserSettings?
+  aiUsageLogs AIUsageLog[]
+  auditLogsAsTarget AuditLog[] @relation("AuditLogUser")
+  auditLogsAsActor  AuditLog[] @relation("AuditLogActor")
+
+  @@index([email])
+  @@index([suspended])
+  @@map("users")
+}
+
+// Saved Words Model (User's Personal Dictionary)
+model SavedWord {
+  id        String   @id @default(uuid())
+  userId    String
+  word      String
+  notes     String?
+  tags      String[] @default([])  // Array of tags for categorization
+  favorite  Boolean  @default(false) // Mark as favorite
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, word])
+  @@index([userId])
+  @@index([word])
+  @@index([userId, favorite])
+  @@index([userId, tags])
+  @@map("saved_words")
+}
+
+// Dictionary Entry Model (Cached Dictionary Data)
+model DictionaryEntry {
+  id          String   @id @default(uuid())
+  word        String   @unique
+  phonetic    String?
+  meanings    Json     // Array of meanings with definitions, examples, synonyms
+  origin      String?
+  source      String   // "free_dictionary_api" or "gemini_ai"
+  cachedAt    DateTime @default(now())
+  lastAccessed DateTime @default(now())
+  accessCount Int      @default(0)
+  expiresAt   DateTime?
+
+  @@index([word])
+  @@index([lastAccessed])
+  @@index([expiresAt])
+  @@map("dictionary_entries")
+}
+
+// User Settings Model
+model UserSettings {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+
+  // LLM Preferences
+  llmModel  String   @default("gemini-2.0-flash")
+
+  // Dictionary Preferences
+  preferredLanguage String @default("en")
+
+  // UI Preferences
+  theme     String   @default("light")
+
+  // Notification Preferences
+  emailNotifications Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_settings")
+}
+
+// AI Usage Log Model (Track API calls for billing/monitoring)
+model AIUsageLog {
+  id            String   @id @default(uuid())
+  userId        String
+  operation     String   // "correct_text", "define_word", "generate_suggestions", "analyze_style"
+  inputTokens   Int      @default(0)
+  outputTokens  Int      @default(0)
+  totalTokens   Int      @default(0)
+  model         String
+  cached        Boolean  @default(false)
+  costEstimate  Float?
+  createdAt     DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([operation])
+  @@map("ai_usage_logs")
+}
+
+// Audit Log Model (Track admin actions)
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorId     String   // Admin who performed the action
+  targetId    String?  // User affected by the action (nullable for system-wide actions)
+  action      String   // "suspend_user", "enable_user", "change_role", "reset_password", "update_settings"
+  details     Json?    // Additional context about the action
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  actor  User  @relation("AuditLogActor", fields: [actorId], references: [id], onDelete: Cascade)
+  target User? @relation("AuditLogUser", fields: [targetId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([targetId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
