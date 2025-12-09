@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 import { createSuccessResponse } from '../utils/transform';
 import { aiGateway } from '../services/AIGateway';
+import { quotaManager } from '../services/AIGateway/core/QuotaManager';
 import { prisma } from '../config/database';
 import logger from '../utils/logger';
 import type { GenerateRequest } from '../services/AIGateway/types';
@@ -30,8 +31,8 @@ export const generate = asyncHandler(async (req: Request, res: Response) => {
     // (Usage tracking is handled automatically by AIGatewayService)
     const response = await aiGateway.generate(generateRequest, userId);
 
-    // Update user quota
-    await updateQuota(userId, response.data.costEstimate.amount);
+    // Update user quota using QuotaManager
+    await quotaManager.incrementQuota(userId, response.data.costEstimate.amount);
 
     // Return success response
     res.status(200).json(response);
@@ -128,47 +129,48 @@ export const getQuota = asyncHandler(async (req: Request, res: Response) => {
 
   logger.info('AI Gateway get quota request', { userId });
 
-  // Fetch user quota
-  const quota = await prisma.aIQuota.findUnique({
-    where: { userId },
-  });
+  // Get quota status using QuotaManager
+  const quotaStatus = await quotaManager.getQuota(userId);
 
-  if (!quota) {
+  if (!quotaStatus) {
     res.status(404).json(
       createSuccessResponse(null, 'No quota found for user. Please contact support.')
     );
     return;
   }
 
-  // Calculate usage percentages
-  const dailyUsagePercent = ((quota.dailyRequestCount / quota.dailyRequestLimit) * 100).toFixed(1);
-  const monthlyUsagePercent = ((quota.monthlyRequestCount / quota.monthlyRequestLimit) * 100).toFixed(1);
-  const monthlySpendPercent = ((quota.monthlySpendAmount / quota.monthlySpendLimit) * 100).toFixed(1);
-
+  // Format quota data with usage percentages
   const quotaData = {
-    tier: quota.tier,
+    tier: quotaStatus.tier,
     daily: {
-      used: quota.dailyRequestCount,
-      limit: quota.dailyRequestLimit,
-      remaining: quota.dailyRequestLimit - quota.dailyRequestCount,
-      usagePercent: parseFloat(dailyUsagePercent),
-      resetAt: quota.dailyResetAt,
+      used: quotaStatus.daily.used,
+      limit: quotaStatus.daily.limit,
+      remaining: quotaStatus.daily.remaining,
+      usagePercent: parseFloat(((quotaStatus.daily.used / quotaStatus.daily.limit) * 100).toFixed(1)),
+      resetAt: quotaStatus.daily.resetAt,
+      exceeded: quotaStatus.daily.exceeded,
     },
     monthly: {
       requests: {
-        used: quota.monthlyRequestCount,
-        limit: quota.monthlyRequestLimit,
-        remaining: quota.monthlyRequestLimit - quota.monthlyRequestCount,
-        usagePercent: parseFloat(monthlyUsagePercent),
+        used: quotaStatus.monthly.requests.used,
+        limit: quotaStatus.monthly.requests.limit,
+        remaining: quotaStatus.monthly.requests.remaining,
+        usagePercent: parseFloat(
+          ((quotaStatus.monthly.requests.used / quotaStatus.monthly.requests.limit) * 100).toFixed(1)
+        ),
+        exceeded: quotaStatus.monthly.requests.exceeded,
       },
       spend: {
-        amount: quota.monthlySpendAmount,
-        limit: quota.monthlySpendLimit,
-        remaining: quota.monthlySpendLimit - quota.monthlySpendAmount,
-        usagePercent: parseFloat(monthlySpendPercent),
+        amount: quotaStatus.monthly.spend.used,
+        limit: quotaStatus.monthly.spend.limit,
+        remaining: quotaStatus.monthly.spend.remaining,
+        usagePercent: parseFloat(
+          ((quotaStatus.monthly.spend.used / quotaStatus.monthly.spend.limit) * 100).toFixed(1)
+        ),
         currency: 'USD',
+        exceeded: quotaStatus.monthly.spend.exceeded,
       },
-      resetAt: quota.monthlyResetAt,
+      resetAt: quotaStatus.monthly.resetAt,
     },
   };
 
@@ -176,9 +178,9 @@ export const getQuota = asyncHandler(async (req: Request, res: Response) => {
 
   logger.info('AI Gateway quota retrieved', {
     userId,
-    tier: quota.tier,
-    dailyUsed: quota.dailyRequestCount,
-    monthlyUsed: quota.monthlyRequestCount,
+    tier: quotaStatus.tier,
+    dailyUsed: quotaStatus.daily.used,
+    monthlyUsed: quotaStatus.monthly.requests.used,
   });
 });
 
@@ -294,30 +296,5 @@ export const getUsage = asyncHandler(async (req: Request, res: Response) => {
 // ========================================
 // Helper Functions
 // ========================================
-
-/**
- * Update user quota after successful generation
- *
- * Note: Usage tracking is handled automatically by AIGatewayService.
- * This function only updates the quota counters.
- */
-async function updateQuota(userId: string, cost: number): Promise<void> {
-  try {
-    await prisma.aIQuota.update({
-      where: { userId },
-      data: {
-        dailyRequestCount: { increment: 1 },
-        monthlyRequestCount: { increment: 1 },
-        monthlySpendAmount: { increment: cost },
-      },
-    });
-
-    logger.debug('Quota updated successfully', { userId, cost });
-  } catch (error) {
-    // Don't fail the request if quota update fails
-    logger.error('Failed to update quota', {
-      userId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-}
+// Note: Quota management is now handled by QuotaManager service
+// Usage tracking is handled automatically by AIGatewayService

@@ -243,19 +243,19 @@
 #### 9.1 Create Quota Manager
 **File:** `src/services/aiGateway/core/QuotaManager.ts`
 
-- [ ] Implement `checkQuota()` method
-- [ ] Check daily request limits
-- [ ] Check monthly request limits
-- [ ] Check monthly spend limits
-- [ ] Throw appropriate errors for quota exceeded
-- [ ] Implement `incrementQuota()` method
+- [x] Implement `checkQuota()` method
+- [x] Check daily request limits
+- [x] Check monthly request limits
+- [x] Check monthly spend limits
+- [x] Throw appropriate errors for quota exceeded
+- [x] Implement `incrementQuota()` method
 
 **Estimated Time:** 2 hours
 
 #### 9.2 Integrate Quota Checking
-- [ ] Add quota check before generation
-- [ ] Update quota after successful generation
-- [ ] Handle quota exceeded errors
+- [x] Add quota check before generation
+- [x] Update quota after successful generation
+- [x] Handle quota exceeded errors
 
 **Estimated Time:** 30 minutes
 
