@@ -272,7 +272,12 @@ export class AdminService {
    * Get audit logs with pagination
    */
   async getAuditLogs(page = 1, limit = 50): Promise<AuditLogResponse> {
-    const skip = (page - 1) * limit;
+    // Normalize and validate pagination inputs to avoid negative skip values
+    page = Number(page) || 1;
+    limit = Number(limit) || 50;
+    if (page < 1) page = 1;
+    if (limit < 1) limit = 50;
+    const skip = Math.max(0, (page - 1) * limit);
 
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({

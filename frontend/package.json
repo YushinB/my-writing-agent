@@ -7,7 +7,6 @@
   "scripts": {
     "dev": "webpack serve --mode development",
     "dev:frontend": "webpack serve --mode development",
-    "dev:backend": "echo \"No backend configured. Implement the backend and replace this script.\"",
     "dev:all": "npm run dev:frontend",
     "build": "webpack --mode production",
     "build:analyze": "cross-env ANALYZE=true webpack --mode production",
