@@ -9,6 +9,7 @@ import type {
   QuotaStatus,
   RateLimitInfo,
 } from '../types';
+import { errorHandler } from '../core/ErrorHandler';
 
 export class OpenAIAdapter implements ModelAdapter {
   public providerName = 'openai';
@@ -59,18 +60,31 @@ export class OpenAIAdapter implements ModelAdapter {
         raw: resp,
       } as GenerateResult;
     } catch (err: any) {
-      throw this.wrapError(err);
+      // Use ErrorHandler to convert provider errors to standardized errors
+      throw errorHandler.handleProviderError(err, this.providerName);
     }
   }
 
   // Simple health check calling a very small request or /models endpoint if available
   async health(): Promise<HealthStatus> {
     try {
+      const startTime = Date.now();
       // Use a lightweight call to verify API key works
       await this.client.models.retrieve(this.modelId);
-      return { healthy: true, lastChecked: new Date() } as HealthStatus;
+      const latency = Date.now() - startTime;
+      return {
+        healthy: true,
+        latency,
+        lastChecked: new Date(),
+      } as HealthStatus;
     } catch (err: any) {
-      return { healthy: false, lastChecked: new Date(), message: err?.message } as HealthStatus;
+      const error = errorHandler.handleProviderError(err, this.providerName);
+      return {
+        healthy: false,
+        lastChecked: new Date(),
+        message: error.message,
+        errorRate: 1.0,
+      } as HealthStatus;
     }
   }
 
@@ -143,14 +157,7 @@ export class OpenAIAdapter implements ModelAdapter {
     }
   }
 
-  private wrapError(err: any): Error {
-    // Map common OpenAI errors to clearer messages
-    if (!err) return new Error('Unknown OpenAI error');
-    if (err.status === 401) return new Error('OpenAI: Unauthorized - check API key');
-    if (err.status === 429) return new Error('OpenAI: Rate limit exceeded');
-    if (err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET') return new Error('OpenAI: Timeout');
-    return new Error(`OpenAI error: ${err.message || err}`);
-  }
+  // Removed wrapError - now using ErrorHandler service
 }
 
 export default OpenAIAdapter;
