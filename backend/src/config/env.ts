@@ -89,6 +89,20 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().min(1, 'Gemini API key is required'),
   GEMINI_MODEL: z.string().default('gemini-2.0-flash'),
 
+  // AI Gateway - OpenAI
+  OPENAI_API_KEY: z.string().optional(), // Optional since we may not use OpenAI initially
+  OPENAI_MODEL: z.string().default('gpt-3.5-turbo'),
+  OPENAI_MAX_TOKENS: z.string().default('2000').transform(Number),
+
+  // AI Gateway Configuration
+  AI_GATEWAY_REQUEST_TIMEOUT: z.string().default('30000').transform(Number), // 30 seconds
+  AI_GATEWAY_MAX_RETRIES: z.string().default('2').transform(Number),
+
+  // AI Gateway Quotas
+  AI_QUOTA_DAILY_LIMIT: z.string().default('1000').transform(Number),
+  AI_QUOTA_MONTHLY_LIMIT: z.string().default('10000').transform(Number),
+  AI_QUOTA_MONTHLY_SPEND_LIMIT: z.string().default('10.00').transform(Number),
+
   // CORS Configuration
   CORS_ORIGIN: z
     .string()

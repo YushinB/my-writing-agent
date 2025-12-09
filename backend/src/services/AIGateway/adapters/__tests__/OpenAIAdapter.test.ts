@@ -9,22 +9,25 @@ jest.mock('openai');
 describe('OpenAIAdapter', () => {
   let adapter: OpenAIAdapter;
   let mockClient: jest.Mocked<OpenAI>;
-  const mockApiKey = 'test-api-key';
+  const mockApiKey = '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';
   const mockModelId = 'gpt-3.5-turbo';
 
   beforeEach(() => {
     // Reset mocks
     jest.clearAllMocks();
 
-    // Create mock client
+    // Create mock client with proper typing
+    const mockCreate = jest.fn() as jest.MockedFunction<any>;
+    const mockRetrieve = jest.fn() as jest.MockedFunction<any>;
+    
     mockClient = {
       chat: {
         completions: {
-          create: jest.fn(),
+          create: mockCreate,
         },
       },
       models: {
-        retrieve: jest.fn(),
+        retrieve: mockRetrieve,
       },
     } as any;
 
@@ -98,7 +101,7 @@ describe('OpenAIAdapter', () => {
     };
 
     beforeEach(() => {
-      (mockClient.chat.completions.create as jest.Mock).mockResolvedValue(mockOpenAIResponse);
+      (mockClient.chat.completions.create as jest.MockedFunction<any>).mockResolvedValue(mockOpenAIResponse);
     });
 
     it('should generate text successfully', async () => {
@@ -179,21 +182,21 @@ describe('OpenAIAdapter', () => {
 
     it('should handle API errors gracefully', async () => {
       const mockError = { status: 429, message: 'Rate limit exceeded' };
-      (mockClient.chat.completions.create as jest.Mock).mockRejectedValue(mockError);
+      (mockClient.chat.completions.create as jest.MockedFunction<any>).mockRejectedValue(mockError);
 
       await expect(adapter.generate(mockRequest)).rejects.toThrow('OpenAI: Rate limit exceeded');
     });
 
     it('should wrap unauthorized errors', async () => {
       const mockError = { status: 401, message: 'Invalid API key' };
-      (mockClient.chat.completions.create as jest.Mock).mockRejectedValue(mockError);
+      (mockClient.chat.completions.create as jest.MockedFunction<any>).mockRejectedValue(mockError);
 
       await expect(adapter.generate(mockRequest)).rejects.toThrow('OpenAI: Unauthorized - check API key');
     });
 
     it('should wrap timeout errors', async () => {
       const mockError = { code: 'ETIMEDOUT', message: 'Request timeout' };
-      (mockClient.chat.completions.create as jest.Mock).mockRejectedValue(mockError);
+      (mockClient.chat.completions.create as jest.MockedFunction<any>).mockRejectedValue(mockError);
 
       await expect(adapter.generate(mockRequest)).rejects.toThrow('OpenAI: Timeout');
     });
@@ -201,7 +204,7 @@ describe('OpenAIAdapter', () => {
 
   describe('health()', () => {
     it('should return healthy status when API is accessible', async () => {
-      (mockClient.models.retrieve as jest.Mock).mockResolvedValue({ id: mockModelId });
+      (mockClient.models.retrieve as jest.MockedFunction<any>).mockResolvedValue({ id: mockModelId });
 
       const status = await adapter.health();
 
@@ -211,7 +214,7 @@ describe('OpenAIAdapter', () => {
 
     it('should return unhealthy status when API is not accessible', async () => {
       const mockError = new Error('API not reachable');
-      (mockClient.models.retrieve as jest.Mock).mockRejectedValue(mockError);
+      (mockClient.models.retrieve as jest.MockedFunction<any>).mockRejectedValue(mockError);
 
       const status = await adapter.health();
 
@@ -221,7 +224,7 @@ describe('OpenAIAdapter', () => {
     });
 
     it('should call models.retrieve with correct model ID', async () => {
-      (mockClient.models.retrieve as jest.Mock).mockResolvedValue({ id: mockModelId });
+      (mockClient.models.retrieve as jest.MockedFunction<any>).mockResolvedValue({ id: mockModelId });
 
       await adapter.health();
 
@@ -321,14 +324,14 @@ describe('OpenAIAdapter', () => {
 
   describe('Error handling', () => {
     it('should handle unknown errors', async () => {
-      (mockClient.chat.completions.create as jest.Mock).mockRejectedValue(null);
+      (mockClient.chat.completions.create as jest.MockedFunction<any>).mockRejectedValue(null);
 
       await expect(adapter.generate({ prompt: 'test' })).rejects.toThrow('Unknown OpenAI error');
     });
 
     it('should preserve error messages for unhandled errors', async () => {
       const customError = { message: 'Custom error message', status: 500 };
-      (mockClient.chat.completions.create as jest.Mock).mockRejectedValue(customError);
+      (mockClient.chat.completions.create as jest.MockedFunction<any>).mockRejectedValue(customError);
 
       await expect(adapter.generate({ prompt: 'test' })).rejects.toThrow('OpenAI error: Custom error message');
     });
