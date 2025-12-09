@@ -334,6 +334,10 @@ async function main() {
     // Clean existing data (optional - comment out in production)
     console.log('🗑️  Cleaning existing seed data...');
     await prisma.aIUsageLog.deleteMany({});
+    await prisma.aIUsage.deleteMany({});
+    await prisma.userModelPreference.deleteMany({});
+    await prisma.providerHealth.deleteMany({});
+    await prisma.aIQuota.deleteMany({});
     await prisma.savedWord.deleteMany({});
     await prisma.userSettings.deleteMany({});
     await prisma.user.deleteMany({
@@ -341,6 +345,11 @@ async function main() {
         email: {
           in: ['admin@prosepolish.com', 'user1@example.com', 'user2@example.com', 'demo@prosepolish.com'],
         },
+      },
+    });
+    await prisma.aIProvider.deleteMany({
+      where: {
+        name: 'openai',
       },
     });
     await prisma.dictionaryEntry.deleteMany({
@@ -438,7 +447,139 @@ async function main() {
       },
     });
 
-    // 3. Seed Dictionary Entries
+    // 3. Seed AI Gateway Providers
+    console.log('🤖 Seeding AI Gateway providers...');
+
+    // Create OpenAI provider
+    const openaiProvider = await prisma.aIProvider.create({
+      data: {
+        name: 'openai',
+        displayName: 'OpenAI',
+        description: 'OpenAI GPT models - industry-leading language models',
+        enabled: true,
+        priority: 100, // High priority as default provider
+        config: {
+          baseUrl: 'https://api.openai.com/v1',
+          models: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+        },
+        // OpenAI GPT-3.5-turbo pricing (as of Phase 1)
+        promptCostPer1k: 0.0015,
+        completionCostPer1k: 0.002,
+        requestsPerMinute: 3500,
+        requestsPerDay: 10000,
+      },
+    });
+    console.log(`✅ AI Provider created: ${openaiProvider.displayName}`);
+
+    // 4. Create AI Quotas for Users
+    console.log('📊 Creating AI quotas for users...');
+
+    const now = new Date();
+    const dailyReset = new Date(now);
+    dailyReset.setHours(24, 0, 0, 0); // Reset at midnight
+
+    const monthlyReset = new Date(now);
+    monthlyReset.setMonth(monthlyReset.getMonth() + 1, 1); // Reset on 1st of next month
+    monthlyReset.setHours(0, 0, 0, 0);
+
+    // Admin quota - higher limits
+    await prisma.aIQuota.create({
+      data: {
+        userId: adminUser.id,
+        dailyRequestLimit: 5000,
+        dailyRequestCount: 0,
+        dailyResetAt: dailyReset,
+        monthlyRequestLimit: 50000,
+        monthlyRequestCount: 0,
+        monthlySpendLimit: 100.0,
+        monthlySpendAmount: 0.0,
+        monthlyResetAt: monthlyReset,
+        tier: 'admin',
+      },
+    });
+    console.log(`✅ AI Quota created for ${adminUser.name}`);
+
+    // User1 quota - standard limits
+    await prisma.aIQuota.create({
+      data: {
+        userId: user1.id,
+        dailyRequestLimit: 1000,
+        dailyRequestCount: 0,
+        dailyResetAt: dailyReset,
+        monthlyRequestLimit: 10000,
+        monthlyRequestCount: 0,
+        monthlySpendLimit: 10.0,
+        monthlySpendAmount: 0.0,
+        monthlyResetAt: monthlyReset,
+        tier: 'free',
+      },
+    });
+    console.log(`✅ AI Quota created for ${user1.name}`);
+
+    // User2 quota - standard limits
+    await prisma.aIQuota.create({
+      data: {
+        userId: user2.id,
+        dailyRequestLimit: 1000,
+        dailyRequestCount: 0,
+        dailyResetAt: dailyReset,
+        monthlyRequestLimit: 10000,
+        monthlyRequestCount: 0,
+        monthlySpendLimit: 10.0,
+        monthlySpendAmount: 0.0,
+        monthlyResetAt: monthlyReset,
+        tier: 'free',
+      },
+    });
+    console.log(`✅ AI Quota created for ${user2.name}`);
+
+    // Demo user quota - standard limits
+    await prisma.aIQuota.create({
+      data: {
+        userId: demoUser.id,
+        dailyRequestLimit: 1000,
+        dailyRequestCount: 0,
+        dailyResetAt: dailyReset,
+        monthlyRequestLimit: 10000,
+        monthlyRequestCount: 0,
+        monthlySpendLimit: 10.0,
+        monthlySpendAmount: 0.0,
+        monthlyResetAt: monthlyReset,
+        tier: 'free',
+      },
+    });
+    console.log(`✅ AI Quota created for ${demoUser.name}`);
+
+    // 5. Create User Model Preferences
+    console.log('🎯 Creating user model preferences...');
+
+    // Admin prefers GPT-4 for quality
+    await prisma.userModelPreference.create({
+      data: {
+        userId: adminUser.id,
+        provider: 'openai',
+        model: 'gpt-4',
+        context: 'general',
+        isDefault: true,
+        priority: 100,
+      },
+    });
+
+    // User1 prefers GPT-3.5-turbo for cost
+    await prisma.userModelPreference.create({
+      data: {
+        userId: user1.id,
+        provider: 'openai',
+        model: 'gpt-3.5-turbo',
+        context: 'general',
+        isDefault: true,
+        priority: 100,
+      },
+    });
+
+    console.log(`✅ Created model preferences for users`);
+
+    // 6. Seed Dictionary Entries
     console.log('📚 Seeding dictionary entries...');
     let dictionaryCount = 0;
     for (const wordData of commonWords) {
@@ -525,6 +666,9 @@ async function main() {
     console.log(`   - Dictionary Entries: ${dictionaryCount}`);
     console.log(`   - User Settings: 4`);
     console.log(`   - Saved Words: ${user1SavedWords.length + user2SavedWords.length + demoSavedWords.length}`);
+    console.log(`   - AI Providers: 1 (OpenAI)`);
+    console.log(`   - AI Quotas: 4`);
+    console.log(`   - Model Preferences: 2`);
     console.log('\n👤 Test Accounts:');
     console.log('   Admin:');
     console.log('     Email: admin@prosepolish.com');

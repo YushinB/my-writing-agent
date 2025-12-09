@@ -43,6 +43,11 @@ model User {
   auditLogsAsTarget AuditLog[] @relation("AuditLogUser")
   auditLogsAsActor  AuditLog[] @relation("AuditLogActor")
 
+  // AI Gateway Relations
+  aiGatewayUsage AIUsage[]
+  aiQuota        AIQuota?
+  modelPreferences UserModelPreference[]
+
   @@index([email])
   @@index([suspended])
   @@map("users")
@@ -158,4 +163,182 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ========================================
+// AI Gateway Models
+// ========================================
+
+// AI Provider Model (Registry of available AI providers)
+model AIProvider {
+  id          String   @id @default(uuid())
+  name        String   @unique // "openai", "deepseek", "huggingface", etc.
+  displayName String   // "OpenAI", "DeepSeek", "Hugging Face"
+  description String?
+
+  // Configuration
+  enabled     Boolean  @default(true)
+  priority    Int      @default(0) // Higher priority = preferred in routing
+
+  // API Configuration (stored as JSON for flexibility)
+  config      Json?    // API endpoints, default settings, etc.
+
+  // Pricing (USD per 1K tokens)
+  promptCostPer1k     Float   @default(0)
+  completionCostPer1k Float   @default(0)
+
+  // Rate Limits
+  requestsPerMinute Int     @default(60)
+  requestsPerDay    Int     @default(10000)
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  usage         AIUsage[]
+  healthRecords ProviderHealth[]
+
+  @@index([enabled])
+  @@index([priority])
+  @@map("ai_providers")
+}
+
+// AI Usage Model (Track Gateway usage per request)
+model AIUsage {
+  id         String   @id @default(uuid())
+  userId     String
+  providerId String
+
+  // Request Details
+  model      String   // Specific model used (e.g., "gpt-4", "deepseek-chat")
+  operation  String   // "generate", "chat", "complete"
+  prompt     String?  // Optional: store prompt for debugging (be mindful of PII)
+
+  // Token Usage
+  promptTokens     Int @default(0)
+  completionTokens Int @default(0)
+  totalTokens      Int @default(0)
+
+  // Performance Metrics
+  latency    Int      // Response time in milliseconds
+  cached     Boolean  @default(false)
+  successful Boolean  @default(true)
+
+  // Cost
+  estimatedCost Float  @default(0) // USD
+
+  // Error Info (if failed)
+  errorCode    String?
+  errorMessage String?
+
+  // Metadata
+  requestId String?  @unique // For request tracing
+  metadata  Json?    // Additional context
+  createdAt DateTime @default(now())
+
+  // Relations
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider AIProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([providerId])
+  @@index([createdAt])
+  @@index([successful])
+  @@index([userId, createdAt])
+  @@index([providerId, createdAt])
+  @@map("ai_usage")
+}
+
+// AI Quota Model (User quotas and limits)
+model AIQuota {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  // Daily Limits
+  dailyRequestLimit   Int @default(1000)
+  dailyRequestCount   Int @default(0)
+  dailyResetAt        DateTime
+
+  // Monthly Limits
+  monthlyRequestLimit Int   @default(10000)
+  monthlyRequestCount Int   @default(0)
+  monthlySpendLimit   Float @default(10.00) // USD
+  monthlySpendAmount  Float @default(0.00)  // USD
+  monthlyResetAt      DateTime
+
+  // Tier/Plan (for future use)
+  tier String @default("free") // "free", "pro", "enterprise"
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([dailyResetAt])
+  @@index([monthlyResetAt])
+  @@map("ai_quotas")
+}
+
+// Provider Health Model (Track provider availability and performance)
+model ProviderHealth {
+  id         String   @id @default(uuid())
+  providerId String
+
+  // Health Status
+  healthy      Boolean @default(true)
+  statusCode   Int?    // HTTP status code or custom code
+  errorMessage String?
+
+  // Performance Metrics
+  averageLatency Float? // Average response time in ms
+  errorRate      Float? // Error rate (0.0 - 1.0)
+
+  // Circuit Breaker Info
+  consecutiveFailures Int     @default(0)
+  lastFailureAt       DateTime?
+
+  // Metadata
+  checkedAt DateTime @default(now())
+  metadata  Json?    // Additional health check data
+
+  // Relations
+  provider AIProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+  @@index([checkedAt])
+  @@index([healthy])
+  @@map("provider_health")
+}
+
+// User Model Preference (User's preferred AI models)
+model UserModelPreference {
+  id       String @id @default(uuid())
+  userId   String
+
+  // Preference Details
+  provider String   // Provider name (e.g., "openai", "deepseek")
+  model    String   // Model ID (e.g., "gpt-4", "deepseek-chat")
+
+  // Context/Use Case (optional)
+  context  String?  // "general", "coding", "writing", etc.
+
+  // Priority
+  isDefault Boolean @default(false) // Default model for all operations
+  priority  Int     @default(0)     // Higher = more preferred
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, model, context])
+  @@index([userId])
+  @@index([userId, isDefault])
+  @@map("user_model_preferences")
 }
