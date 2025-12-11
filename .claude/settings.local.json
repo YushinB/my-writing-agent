@@ -9,7 +9,9 @@
       "Bash(docker exec:*)",
       "Bash(npm run db:seed:*)",
       "Bash(gh issue view:*)",
-      "Bash(npx prisma migrate:*)"
+      "Bash(npx prisma migrate:*)",
+      "Bash(gh issue create:*)",
+      "Bash(timeout 30 npm test:*)"
     ],
     "deny": [],
     "ask": []

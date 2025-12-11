@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as aiGatewayController from '../../controllers/aiGateway.controller';
-import { aiGatewayAuth, requireAiGatewayAdmin } from '../../middleware/AIGateway/auth';
+import { aiGatewayAuth } from '../../middleware/AIGateway/auth';
 import {
   validateGenerateRequest,
   validateHealthCheckQuery,
@@ -94,11 +94,12 @@ router.get('/usage', aiGatewayAuth, aiGatewayController.getUsage);
  */
 
 // Placeholder for future admin routes
-router.use('/admin/*', requireAiGatewayAdmin, (_req, res) => {
-  res.status(501).json({
-    success: false,
-    message: 'Admin endpoints are not yet implemented. Coming in Phase 2.',
-  });
-});
+// TODO Phase 2: Implement admin routes
+// router.use('/admin/:path*', requireAiGatewayAdmin, (_req, res) => {
+//   res.status(501).json({
+//     success: false,
+//     message: 'Admin endpoints are not yet implemented. Coming in Phase 2.',
+//   });
+// });
 
 export default router;

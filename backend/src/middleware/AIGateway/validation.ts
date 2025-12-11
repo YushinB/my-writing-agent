@@ -164,8 +164,8 @@ export type ValidatedHealthCheckQuery = z.infer<typeof HealthCheckQuerySchema>;
 export function validateHealthCheckQuery(req: Request, _res: Response, next: NextFunction) {
   void _res;
   try {
-    const validated = HealthCheckQuerySchema.parse(req.query);
-    req.query = validated as any;
+    // Validate query parameters - no need to reassign req.query since it's read-only
+    HealthCheckQuerySchema.parse(req.query);
     next();
   } catch (error) {
     if (error instanceof ZodError) {
@@ -196,7 +196,7 @@ export const ProviderConfigSchema = z.object({
   description: z.string().optional(),
   enabled: z.boolean().default(true),
   priority: z.number().int().min(0).max(1000).default(0),
-  config: z.record(z.any()).optional(),
+  config: z.record(z.string(), z.any()).optional(),
   promptCostPer1k: z.number().min(0).default(0),
   completionCostPer1k: z.number().min(0).default(0),
   requestsPerMinute: z.number().int().min(1).default(60),

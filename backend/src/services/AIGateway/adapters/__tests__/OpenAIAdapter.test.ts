@@ -184,21 +184,21 @@ describe('OpenAIAdapter', () => {
       const mockError = { status: 429, message: 'Rate limit exceeded' };
       (mockClient.chat.completions.create as jest.MockedFunction<any>).mockRejectedValue(mockError);
 
-      await expect(adapter.generate(mockRequest)).rejects.toThrow('OpenAI: Rate limit exceeded');
+      await expect(adapter.generate(mockRequest)).rejects.toThrow('Rate limit exceeded');
     });
 
     it('should wrap unauthorized errors', async () => {
       const mockError = { status: 401, message: 'Invalid API key' };
       (mockClient.chat.completions.create as jest.MockedFunction<any>).mockRejectedValue(mockError);
 
-      await expect(adapter.generate(mockRequest)).rejects.toThrow('OpenAI: Unauthorized - check API key');
+      await expect(adapter.generate(mockRequest)).rejects.toThrow('Provider authentication failed - check API key');
     });
 
     it('should wrap timeout errors', async () => {
       const mockError = { code: 'ETIMEDOUT', message: 'Request timeout' };
       (mockClient.chat.completions.create as jest.MockedFunction<any>).mockRejectedValue(mockError);
 
-      await expect(adapter.generate(mockRequest)).rejects.toThrow('OpenAI: Timeout');
+      await expect(adapter.generate(mockRequest)).rejects.toThrow("Provider 'openai' request timed out after 30000ms");
     });
   });
 
@@ -220,7 +220,7 @@ describe('OpenAIAdapter', () => {
 
       expect(status.healthy).toBe(false);
       expect(status.lastChecked).toBeInstanceOf(Date);
-      expect(status.message).toBe('API not reachable');
+      expect(status.message).toBe('Provider request failed');
     });
 
     it('should call models.retrieve with correct model ID', async () => {
@@ -326,14 +326,14 @@ describe('OpenAIAdapter', () => {
     it('should handle unknown errors', async () => {
       (mockClient.chat.completions.create as jest.MockedFunction<any>).mockRejectedValue(null);
 
-      await expect(adapter.generate({ prompt: 'test' })).rejects.toThrow('Unknown OpenAI error');
+      await expect(adapter.generate({ prompt: 'test' })).rejects.toThrow('Provider request failed');
     });
 
     it('should preserve error messages for unhandled errors', async () => {
       const customError = { message: 'Custom error message', status: 500 };
       (mockClient.chat.completions.create as jest.MockedFunction<any>).mockRejectedValue(customError);
 
-      await expect(adapter.generate({ prompt: 'test' })).rejects.toThrow('OpenAI error: Custom error message');
+      await expect(adapter.generate({ prompt: 'test' })).rejects.toThrow('Provider request failed');
     });
   });
 });

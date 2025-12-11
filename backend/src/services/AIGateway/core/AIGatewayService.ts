@@ -4,7 +4,6 @@ import type {
   GenerateResponse,
   GenerateResult,
   HealthStatus,
-  RoutingPolicy,
 } from '../types';
 import { usageTracker } from './UsageTracker';
 
@@ -159,18 +158,21 @@ export class AIGatewayService {
       const latency = Date.now() - startTime;
 
       // Track failed usage (non-blocking)
-      if (userId && adapter) {
-        const errorCode = this.getErrorCode(error);
-        const errorMessage = error instanceof Error ? error.message : String(error);
+      if (userId) {
+        const selectedAdapter = this.selectAdapter(request);
+        if (selectedAdapter) {
+          const errorCode = this.getErrorCode(error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
 
-        usageTracker
-          .recordFailure(userId, request, adapter.providerName, adapter.modelId, {
-            code: errorCode,
-            message: errorMessage,
-          }, latency)
-          .catch((err) => {
-            this.log('warn', 'Failed usage tracking failed (non-blocking)', { error: err.message });
-          });
+          usageTracker
+            .recordFailure(userId, request, selectedAdapter.providerName, selectedAdapter.modelId, {
+              code: errorCode,
+              message: errorMessage,
+            }, latency)
+            .catch((err) => {
+              this.log('warn', 'Failed usage tracking failed (non-blocking)', { error: err.message });
+            });
+        }
       }
 
       this.log('error', `Generation failed`, {
@@ -391,15 +393,6 @@ export class AIGatewayService {
     message: string,
     metadata?: Record<string, any>
   ): void {
-    const timestamp = new Date().toISOString();
-    const logEntry = {
-      timestamp,
-      level,
-      service: 'AIGateway',
-      message,
-      ...metadata,
-    };
-
     // In production, this would use a proper logger (Winston, Pino, etc.)
     // For now, use console
     if (level === 'error') {

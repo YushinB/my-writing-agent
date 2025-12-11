@@ -318,7 +318,7 @@ export class UsageTracker {
   /**
    * Calculate cost estimate for failed requests
    */
-  private async calculateCostForError(record: UsageRecord): Promise<CostEstimate> {
+  private async calculateCostForError(_record: UsageRecord): Promise<CostEstimate> {
     // For failed requests, we still might have incurred some cost
     // (e.g., if the request was sent but failed)
     // For now, return zero cost for errors

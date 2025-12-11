@@ -69,7 +69,7 @@ export class ErrorHandler {
     // Model not found
     {
       pattern: /model.*not found|invalid model|unknown model/i,
-      handler: (match, provider, originalError) => {
+      handler: (_match, provider, originalError) => {
         const model = this.extractModelName(originalError);
         return new ModelNotFoundError(model || 'unknown', { provider });
       },
@@ -78,7 +78,7 @@ export class ErrorHandler {
     // Context length exceeded
     {
       pattern: /context length|maximum context|token limit|too long/i,
-      handler: (match, provider, originalError) => {
+      handler: (_match, provider, originalError) => {
         const { max, actual } = this.extractTokenCounts(originalError);
         return new ContextLengthExceededError(max, actual, { provider });
       },
